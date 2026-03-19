@@ -2,6 +2,7 @@
   "expo": {
     "name": "gaming-store",
     "slug": "gaming-store",
+    "owner": "AmjadAbubkr",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -26,6 +27,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6af1ae99-b19a-4468-b794-48f3352bb191"
+      }
     }
   }
 }
