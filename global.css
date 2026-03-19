@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .glass-panel {
+    background-color: rgba(38, 38, 38, 0.4);
+    border-width: 1px;
+    border-color: rgba(143, 245, 255, 0.1);
+  }
+
+  .corner-highlight {
+    position: relative;
+  }
+
+  /* 
+   * In React Native (NativeWind), complex pseudo-elements (::before/::after) 
+   * are often best handled via actual absolute-positioned View components
+   * rather than CSS to ensure cross-platform compatibility. 
+   * We will create a <CornerHighlight> component for this effect.
+   */
+}

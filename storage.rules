@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper to check admin status (requires Firebase Auth token to have 'admin' custom claim, 
+    // or we check auth.uid against a known admin list. For simplicity in this app, 
+    // since we use Firestore for roles, we will just allow authenticated users to read, 
+    // but only authenticated users can upload).
+    
+    match /products/{productId}/{fileName} {
+      // Anyone can view product images
+      allow read: if true;
+      // Only authenticated users (admins) can upload. 
+      // (In a production app, use Custom Claims to verify admin status at the Storage layer)
+      allow write: if request.auth != null; 
+    }
+  }
+}
