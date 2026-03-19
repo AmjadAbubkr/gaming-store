@@ -132,7 +132,7 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       const finalImageUrls = [...productData.images, ...uploadedUrls];
       
       if (isEditing || uploadedUrls.length > 0) {
-        await firestoreService.updateProduct(currentProductId!, { images: finalImageUrls, ...productData });
+        await firestoreService.updateProduct(currentProductId!, { ...productData, images: finalImageUrls });
         
         // Update store locally
         const updatedDoc = await getProductById(currentProductId!);

@@ -53,3 +53,14 @@ export const isValidPhone = (phone: string): boolean => {
   const regex = /^\+?[\d\s-]{8,15}$/;
   return regex.test(phone);
 };
+
+/**
+ * Format number to currency (FCFA by default)
+ */
+export const formatPrice = (price: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'XAF', // FCFA
+    minimumFractionDigits: 0,
+  }).format(price);
+};

@@ -69,7 +69,7 @@ export const Button = ({
       style={[glowStyle, style]}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'whatsapp' ? 'black' : COLORS[variant] || COLORS.primary} />
+        <ActivityIndicator color={variant === 'whatsapp' ? 'black' : variant === 'danger' ? COLORS.error : COLORS[variant as 'primary' | 'secondary'] || COLORS.primary} />
       ) : (
         <>
           {icon && <View className="mr-3">{icon}</View>}
