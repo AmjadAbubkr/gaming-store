@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HomeStackParamList } from '../../../navigation/types';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
 import { ProductCard } from '../components/ProductCard';
 import { useProductsStore } from '../../../store/productsStore';
@@ -10,10 +8,17 @@ import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { COLORS } from '../../../constants/theme';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'ProductList'>;
+type Props = {
+  route: {
+    params: {
+      categoryId?: string;
+    };
+  };
+  navigation: any;
+};
 
 export const ProductListScreen = ({ route, navigation }: Props) => {
-  const { categoryId } = route.params;
+  const categoryId = route.params?.categoryId ?? 'all';
   
   const { 
     productsList, 

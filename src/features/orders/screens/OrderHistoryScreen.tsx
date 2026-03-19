@@ -9,11 +9,11 @@ import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
 import { ErrorDisplay } from '../../../components/ui/ErrorDisplay';
 import { MaterialIcons } from '@expo/vector-icons';
 import { COLORS } from '../../../constants/theme';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { CustomerTabParamList } from '../../../navigation/types';
 
 type OrderHistoryProps = {
-  navigation: NativeStackNavigationProp<CustomerTabParamList, 'OrdersTab'>;
+  navigation: BottomTabNavigationProp<CustomerTabParamList, 'HomeTab'>;
 };
 
 export const OrderHistoryScreen = ({ navigation }: OrderHistoryProps) => {
@@ -101,7 +101,7 @@ export const OrderHistoryScreen = ({ navigation }: OrderHistoryProps) => {
               title="BROWSE GEAR" 
               variant="secondary"
               className="mt-8"
-              onPress={() => navigation.navigate('HomeTab', { screen: 'Categories' })}
+              onPress={() => navigation.navigate('HomeTab', { screen: 'Home' })}
             />
           </View>
         )}

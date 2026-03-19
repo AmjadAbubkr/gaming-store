@@ -1,17 +1,13 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, RefreshControl } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
 import { CornerHighlight } from '../../../components/layout/CornerHighlight';
 import { CATEGORIES } from '../../../constants/categories';
-import { HomeStackParamList } from '../../../navigation/types';
 import { useAuthStore } from '../../../store/authStore';
 import { useProductsStore } from '../../../store/productsStore';
-import { LoadingSpinner } from '../../../components/ui/LoadingSpinner';
-
 type CategoriesScreenProps = {
-  navigation: NativeStackNavigationProp<HomeStackParamList, 'Categories'>;
+  navigation: any;
 };
 
 export const CategoriesScreen = ({ navigation }: CategoriesScreenProps) => {
@@ -24,7 +20,7 @@ export const CategoriesScreen = ({ navigation }: CategoriesScreenProps) => {
   }, []);
 
   const navigateToCategory = (categoryId: string, categoryName: string) => {
-    navigation.navigate('ProductList', { categoryId, categoryName });
+    navigation.navigate('Home');
   };
 
   return (

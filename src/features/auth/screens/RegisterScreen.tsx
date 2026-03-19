@@ -120,6 +120,17 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
           />
 
           <PremiumInput
+            placeholder="Phone number"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={(text) => {
+              setPhone(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="phone-android" size={20} color="#adaaaa" />}
+          />
+
+          <PremiumInput
             placeholder="Password"
             secureTextEntry
             value={password}

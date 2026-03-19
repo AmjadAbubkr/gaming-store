@@ -12,23 +12,12 @@ import { onAuthChange, getUserProfile } from '../services/firebase/auth';
 import { CustomerTabs } from './CustomerTabs';
 import { AdminNavigator } from './AdminNavigator';
 import { RootStackParamList, AuthStackParamList } from './types';
+import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
 
 // UI
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { COLORS } from '../constants/theme';
-
-// Placeholder Auth Screens
-import { View, Text, Button } from 'react-native';
-const LoginScreen = ({ navigation }: any) => {
-  const setGuest = useAuthStore(s => s.setGuestMode);
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-      <Text style={{ color: COLORS.primary, marginBottom: 20 }}>Login Screen</Text>
-      <Button title="Continue as Guest" onPress={() => setGuest(true)} color={COLORS.secondary} />
-    </View>
-  );
-};
-const RegisterScreen = () => <View style={{ flex: 1, backgroundColor: COLORS.background }}><Text>Register</Text></View>;
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();

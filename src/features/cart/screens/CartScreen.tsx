@@ -62,7 +62,8 @@ export const CartScreen = ({ navigation }: any) => {
       if (launched) {
         // 6. Clear Cart on Success
         clearCart();
-        navigation.navigate('OrdersTab'); // Take them to order history
+        Alert.alert('Order Sent', 'Your order was saved and WhatsApp opened successfully.');
+        navigation.navigate('HomeTab', { screen: 'Home' });
       } else {
         throw new Error('WhatsApp failed to launch');
       }
@@ -91,7 +92,7 @@ export const CartScreen = ({ navigation }: any) => {
         </Text>
         <Button 
           title="RETURN TO HQ" 
-          onPress={() => navigation.navigate('HomeTab', { screen: 'Categories' })} 
+          onPress={() => navigation.navigate('HomeTab', { screen: 'Home' })} 
           variant="secondary"
           className="w-full"
         />
