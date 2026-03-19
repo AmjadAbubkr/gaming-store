@@ -53,83 +53,94 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   };
 
   return (
-    <ScreenWrapper scrollable={false} withKeyboardAvoid={true} padding={false} className="bg-black">
+    <ScreenWrapper
+      scrollable
+      withKeyboardAvoid
+      keyboardVerticalOffset={24}
+      padding={false}
+      className="bg-black"
+      edges={['top', 'left', 'right', 'bottom']}
+    >
       <StatusBar barStyle="light-content" />
-      
-      {/* Top Section with Astronaut Character */}
-      <ImageBackground
-        source={require('../../../../assets/auth-bg.png')}
-        style={{ width: '100%', height: height * 0.45 }}
-        resizeMode="cover"
-        className="justify-end items-center"
-      >
-        {/* Subtle overlay for better text readability if needed */}
-        <View className="absolute inset-0 bg-black/20" />
-      </ImageBackground>
-
-      {/* Bottom Section: Form */}
-      <View className="flex-1 bg-black px-8 pt-6">
-        <View className="items-center mb-8">
-          <Text className="text-white text-3xl font-headline font-bold mb-1">
-            Welcome Back!
-          </Text>
-          <View className="h-1 w-12 bg-primary rounded-full" />
+      <View className="flex-1 bg-black px-5 pb-10">
+        <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
+          <ImageBackground
+            source={require('../../../../assets/auth-bg.png')}
+            style={{ width: '100%', height: height * 0.36 }}
+            resizeMode="contain"
+            imageStyle={{ marginTop: 18 }}
+            className="justify-end items-center bg-[#070707]"
+          >
+            <View className="absolute inset-0 bg-black/20" />
+          </ImageBackground>
         </View>
 
-        <View className="mb-6">
-          <PremiumInput
-            placeholder="Username / Email"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              setLocalError('');
-            }}
-            icon={<MaterialIcons name="person-outline" size={20} color="#adaaaa" />}
-          />
-
-          <PremiumInput
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              setLocalError('');
-            }}
-            icon={<MaterialIcons name="lock-outline" size={20} color="#adaaaa" />}
-          />
-
-          <TouchableOpacity className="items-end mt-1">
-            <Text className="text-[#adaaaa] text-xs">Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
-
-        {(localError || error) ? (
-          <Text className="text-error font-body text-xs mb-4 text-center">
-            {localError || error}
-          </Text>
-        ) : null}
-
-        <PremiumButton
-          title="Login"
-          onPress={handleLogin}
-          loading={isLoading}
-          className="mb-6"
-        />
-
-        <View className="flex-row justify-center items-center">
-          <Text className="text-[#adaaaa] text-sm">
-            Don't have an account?{' '}
-          </Text>
-          <TouchableOpacity onPress={() => {
-            clearError();
-            navigation.navigate('Register');
-          }}>
-            <Text className="text-primary font-bold text-sm">
-              Sign up
+        <View className="mt-[-30] rounded-[28px] border border-white/10 bg-[#111111] px-6 py-7">
+          <View className="items-center mb-8">
+            <Text className="text-white text-3xl font-headline font-bold mb-1">
+              Welcome Back
             </Text>
-          </TouchableOpacity>
+            <Text className="text-[#9c9898] text-xs uppercase tracking-[3px]">
+              Enter the vault
+            </Text>
+            <View className="mt-4 h-1 w-14 bg-primary rounded-full" />
+          </View>
+
+          <View className="mb-6">
+            <PremiumInput
+              placeholder="Email address"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={(text) => {
+                setEmail(text);
+                setLocalError('');
+              }}
+              icon={<MaterialIcons name="person-outline" size={20} color="#adaaaa" />}
+            />
+
+            <PremiumInput
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                setLocalError('');
+              }}
+              icon={<MaterialIcons name="lock-outline" size={20} color="#adaaaa" />}
+            />
+
+            <TouchableOpacity className="items-end mt-1">
+              <Text className="text-[#adaaaa] text-xs">Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+
+          {(localError || error) ? (
+            <Text className="text-error font-body text-xs mb-4 text-center">
+              {localError || error}
+            </Text>
+          ) : null}
+
+          <PremiumButton
+            title="Login"
+            onPress={handleLogin}
+            loading={isLoading}
+            className="mb-6"
+          />
+
+          <View className="flex-row justify-center items-center">
+            <Text className="text-[#adaaaa] text-sm">
+              Don't have an account?{' '}
+            </Text>
+            <TouchableOpacity onPress={() => {
+              clearError();
+              navigation.navigate('Register');
+            }}>
+              <Text className="text-primary font-bold text-sm">
+                Sign up
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScreenWrapper>

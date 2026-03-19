@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CustomerTabParamList, HomeStackParamList } from './types';
 import { useCartStore } from '../store/cartStore';
 import { COLORS, FONTS } from '../constants/theme';
@@ -44,17 +45,20 @@ const HomeStackNavigator = () => (
 
 export const CustomerTabs = () => {
   const itemCount = useCartStore(state => state.itemCount);
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: COLORS.surfaceContainerHighest,
           borderTopColor: COLORS.outlineVariant,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 8,
+          height: 72 + insets.bottom,
+          paddingBottom: Math.max(insets.bottom, 10),
+          paddingTop: 10,
+          paddingHorizontal: 10,
         },
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.onSurfaceVariant,
@@ -63,6 +67,10 @@ export const CustomerTabs = () => {
           fontSize: 10,
           textTransform: 'uppercase',
           letterSpacing: 1,
+        },
+        tabBarItemStyle: {
+          borderRadius: 16,
+          marginHorizontal: 4,
         },
       }}
     >

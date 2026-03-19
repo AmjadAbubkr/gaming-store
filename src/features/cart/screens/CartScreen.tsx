@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, Alert, TouchableOpacity } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '../../../store/cartStore';
 import { useAuthStore } from '../../../store/authStore';
 import { useOrdersStore } from '../../../store/ordersStore';
@@ -16,6 +17,7 @@ export const CartScreen = ({ navigation }: any) => {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCartStore();
   const { user, isGuest } = useAuthStore();
   const { createOrder } = useOrdersStore();
+  const insets = useSafeAreaInsets();
   
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -45,7 +47,7 @@ export const CartScreen = ({ navigation }: any) => {
 
     try {
       // 3. Save Order to Firestore (Important! Do this BEFORE WhatsApp redirect)
-      const order = await createOrder(
+      await createOrder(
         user.id,
         items,
         total,
@@ -101,46 +103,76 @@ export const CartScreen = ({ navigation }: any) => {
   }
 
   return (
-    <ScreenWrapper padding={false}>
+    <ScreenWrapper padding={false} edges={['top', 'left', 'right', 'bottom']}>
       {/* Header */}
-      <View className="px-4 py-4 border-b border-surface-container-high bg-surface-container-low flex-row justify-between items-center">
-        <Text className="font-headline font-bold text-lg text-on-surface uppercase tracking-wider">
-          Active Loadout ({itemCount})
-        </Text>
-        <TouchableOpacity onPress={clearCart}>
-          <Text className="font-body text-xs text-error uppercase">Clear All</Text>
-        </TouchableOpacity>
+      <LinearGradient
+        colors={['#151515', '#0c0c0c']}
+        className="px-4 pb-4 pt-4"
+      >
+        <View className="flex-row justify-between items-center">
+          <View>
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">
+              Cart Overview
+            </Text>
+            <Text className="font-headline font-bold text-2xl text-on-surface">
+              Active Loadout
+            </Text>
+          </View>
+          <TouchableOpacity onPress={clearCart} className="rounded-full border border-error/30 bg-error/10 px-4 py-2">
+            <Text className="font-body text-xs text-error uppercase">Clear All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View className="mt-4 flex-row gap-3">
+          <View className="flex-1 rounded-2xl border border-white/10 bg-surface-container-high/80 px-4 py-4">
+            <Text className="text-[10px] uppercase tracking-[3px] text-outline">Items</Text>
+            <Text className="mt-2 font-headline text-2xl font-bold text-on-surface">{itemCount}</Text>
+          </View>
+          <View className="flex-1 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-4">
+            <Text className="text-[10px] uppercase tracking-[3px] text-primary">Total</Text>
+            <Text className="mt-2 font-headline text-xl font-bold text-primary">{formatPrice(total)}</Text>
+          </View>
+        </View>
+      </LinearGradient>
+
+      <View className="flex-1">
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.productId}
+          renderItem={({ item }) => (
+            <CartItemCard
+              item={item}
+              onIncrease={() => updateQuantity(item.productId, item.quantity + 1)}
+              onDecrease={() => {
+                if (item.quantity > 1) updateQuantity(item.productId, item.quantity - 1);
+                else removeItem(item.productId);
+              }}
+              onRemove={() => removeItem(item.productId)}
+            />
+          )}
+          contentContainerStyle={{ paddingBottom: 190 }}
+          ItemSeparatorComponent={() => <View className="h-3" />}
+          className="px-4 pt-4"
+        />
       </View>
 
-      {/* Cart Items List */}
-      <FlatList
-        data={items}
-        keyExtractor={(item) => item.productId}
-        renderItem={({ item }) => (
-          <CartItemCard
-            item={item}
-            onIncrease={() => updateQuantity(item.productId, item.quantity + 1)}
-            onDecrease={() => {
-              if (item.quantity > 1) updateQuantity(item.productId, item.quantity - 1);
-              else removeItem(item.productId); // Drop to 0 removes it
-            }}
-            onRemove={() => removeItem(item.productId)}
-          />
-        )}
-        contentContainerStyle={{ paddingBottom: 150 }}
-      />
-
       {/* Checkout Footer */}
-      <View className="absolute bottom-0 left-0 right-0 bg-surface-container px-4 py-4 border-t border-outline-variant/30">
-        <View className="flex-row justify-between items-end mb-4">
-          <Text className="font-label text-sm uppercase text-outline">Total Value</Text>
+      <View
+        className="absolute bottom-0 left-0 right-0 border-t border-outline-variant/30 bg-surface-container px-4 pt-4"
+        style={{ paddingBottom: Math.max(insets.bottom, 14) }}
+      >
+        <View className="mb-4 flex-row items-end justify-between">
+          <View>
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">Checkout</Text>
+            <Text className="font-body text-sm text-on-surface-variant">Secure your loadout and send the order to HQ.</Text>
+          </View>
           <Text className="font-headline font-bold text-2xl text-whatsapp-green tracking-wider">
             {formatPrice(total)}
           </Text>
         </View>
 
         <Button
-          title="TRANSMIT TO HQ VIA WHATSAPP"
+          title="Transmit To HQ Via WhatsApp"
           variant="whatsapp"
           onPress={handleCheckout}
           loading={isProcessing}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, Edge } from 'react-native-safe-area-context';
 
 interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -8,6 +8,8 @@ interface ScreenWrapperProps {
   withKeyboardAvoid?: boolean;
   padding?: boolean;
   className?: string;
+  keyboardVerticalOffset?: number;
+  edges?: Edge[];
 }
 
 /**
@@ -21,6 +23,8 @@ export const ScreenWrapper = ({
   withKeyboardAvoid = true,
   padding = true,
   className = '',
+  keyboardVerticalOffset = 0,
+  edges = ['top', 'left', 'right'],
 }: ScreenWrapperProps) => {
   
   const content = scrollable ? (
@@ -40,7 +44,8 @@ export const ScreenWrapper = ({
   const AvoidBase = withKeyboardAvoid ? (
     <KeyboardAvoidingView 
       className="flex-1" 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'position'}
+      keyboardVerticalOffset={keyboardVerticalOffset}
     >
       {content}
     </KeyboardAvoidingView>
@@ -49,7 +54,7 @@ export const ScreenWrapper = ({
   );
 
   return (
-    <SafeAreaView className={`flex-1 bg-background ${className}`} edges={['top', 'left', 'right']}>
+    <SafeAreaView className={`flex-1 bg-background ${className}`} edges={edges}>
       {AvoidBase}
     </SafeAreaView>
   );

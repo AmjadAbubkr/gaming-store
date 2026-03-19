@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { 
   View, 
   Text, 
   ImageBackground, 
   Dimensions, 
-  ScrollView, 
   FlatList, 
   TouchableOpacity 
 } from 'react-native';
@@ -16,11 +15,11 @@ import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
 import { PremiumButton } from '../../../components/ui/PremiumButton';
 import { useCartStore } from '../../../store/cartStore';
 import { useProductsStore } from '../../../store/productsStore';
-import { COLORS, FONTS } from '../../../constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Product } from '../../../types/product';
+import { formatPrice } from '../../../utils/formatting';
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 // List of randomly picked heroes
 const HERO_IMAGES = [
@@ -58,27 +57,43 @@ export const HomeScreen = () => {
     <ScreenWrapper padding={false} scrollable={true} className="flex-1 bg-black">
       
       {/* 35% Top Section Hero */}
-      <ImageBackground
-        source={currentHero}
-        style={{ width: '100%', height: height * 0.35 }}
-        resizeMode="cover"
-      >
-        {/* Gloss Gradient at the bottom */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)', 'black']}
-          className="absolute bottom-0 left-0 right-0 h-24"
-        />
-      </ImageBackground>
+      <View className="px-4 pt-4">
+        <ImageBackground
+          source={currentHero}
+          style={{ width: '100%', height: height * 0.38 }}
+          resizeMode="contain"
+          imageStyle={{ marginTop: 14 }}
+          className="overflow-hidden rounded-[30px] bg-[#111111]"
+        >
+          <View className="absolute left-5 top-5 rounded-full border border-white/10 bg-black/35 px-3 py-2">
+            <Text className="text-[10px] font-bold uppercase tracking-[3px] text-primary">
+              Featured Drop
+            </Text>
+          </View>
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.55)', 'rgba(0,0,0,0.92)']}
+            className="absolute bottom-0 left-0 right-0 h-32"
+          />
+          <View className="absolute bottom-0 left-0 right-0 px-5 pb-5">
+            <Text className="text-white text-3xl font-headline font-bold">
+              Gear Up For
+            </Text>
+            <Text className="mt-1 text-[#9f9b9b] text-sm">
+              A sharper storefront with premium consoles, curated titles, and a faster checkout path.
+            </Text>
+          </View>
+        </ImageBackground>
+      </View>
 
       {/* Cart Summary Section (if cart is not empty) */}
       {cartItems.length > 0 && (
-        <View className="px-6 py-4 bg-surface-container-high/40 mx-4 mt-[-20] rounded-xl border border-white/5 backdrop-blur-md">
+        <View className="mx-4 mt-[-26] rounded-[24px] border border-primary/15 bg-surface-container-high/70 px-6 py-5">
           <View className="flex-row justify-between items-center mb-3">
             <View>
               <Text className="text-[#adaaaa] text-[10px] uppercase tracking-widest font-bold">In Your Arsenal</Text>
               <Text className="text-white text-lg font-headline font-bold">{cartItems.length} Items</Text>
             </View>
-            <Text className="text-primary text-xl font-headline font-bold">${totalPrice.toFixed(2)}</Text>
+            <Text className="text-primary text-xl font-headline font-bold">{formatPrice(totalPrice)}</Text>
           </View>
           
           <PremiumButton
@@ -90,7 +105,7 @@ export const HomeScreen = () => {
       )}
 
       {/* Products (Consoles) Section */}
-      <View className="px-6 py-6">
+      <View className="px-6 py-7">
         <View className="flex-row justify-between items-end mb-4">
           <Text className="text-white text-2xl font-headline font-bold">Modern Consoles</Text>
           <TouchableOpacity onPress={() => navigation.navigate('ConsolesTab' as any)}>
@@ -112,14 +127,14 @@ export const HomeScreen = () => {
                  <ImageBackground source={{ uri: item.images[0] }} className="flex-1" />
               </View>
               <Text className="text-white font-bold" numberOfLines={1}>{item.name}</Text>
-              <Text className="text-primary font-bold">${item.price}</Text>
+              <Text className="text-primary font-bold">{formatPrice(item.price)}</Text>
             </TouchableOpacity>
           )}
         />
       </View>
 
       {/* Games Section */}
-      <View className="px-6 py-6 pb-20">
+      <View className="px-6 py-6 pb-24">
         <View className="flex-row justify-between items-end mb-4">
           <Text className="text-white text-2xl font-headline font-bold">Trending Games</Text>
           <TouchableOpacity onPress={() => navigation.navigate('GamesTab' as any)}>
@@ -141,7 +156,7 @@ export const HomeScreen = () => {
                  <ImageBackground source={{ uri: item.images[0] }} className="flex-1" />
               </View>
               <Text className="text-white font-bold" numberOfLines={1}>{item.name}</Text>
-              <Text className="text-secondary font-bold">${item.price}</Text>
+              <Text className="text-secondary font-bold">{formatPrice(item.price)}</Text>
             </TouchableOpacity>
           )}
         />
