@@ -35,7 +35,7 @@ jobs:
       - name: Check TypeScript types
         run: npx tsc --noEmit
 
-      # If you want to automatically trigger an EAS build on merge to main:
-      # - name: Build on EAS
-      #   if: github.event_name == 'push'
-      #   run: eas build --platform android --profile preview --non-interactive
+      - name: Build Android APK on EAS
+        if: github.event_name == 'push'
+        run: |
+          eas build --platform android --profile preview --non-interactive
