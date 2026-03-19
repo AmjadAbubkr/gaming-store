@@ -7,11 +7,11 @@ import { useCartStore } from '../store/cartStore';
 import { COLORS, FONTS } from '../constants/theme';
 
 // Screens
-import { CategoriesScreen } from '../features/products/screens/CategoriesScreen';
-import { ProductListScreen } from '../features/products/screens/ProductListScreen';
+import { HomeScreen } from '../features/products/screens/HomeScreen';
 import { ProductDetailScreen } from '../features/products/screens/ProductDetailScreen';
+import { ConsolesScreen } from '../features/products/screens/ConsolesScreen';
+import { GamesScreen } from '../features/products/screens/GamesScreen';
 import { CartScreen } from '../features/cart/screens/CartScreen';
-import { OrderHistoryScreen } from '../features/orders/screens/OrderHistoryScreen';
 
 const Tab = createBottomTabNavigator<CustomerTabParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -19,27 +19,25 @@ const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const HomeStackNavigator = () => (
   <HomeStack.Navigator
     screenOptions={{
-      headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
-      headerTintColor: COLORS.onSurface,
-      headerTitleStyle: { fontFamily: FONTS.headline },
-      headerShadowVisible: false,
+      headerShown: false,
       contentStyle: { backgroundColor: COLORS.background },
     }}
   >
     <HomeStack.Screen 
-      name="Categories" 
-      component={CategoriesScreen} 
-      options={{ title: 'Hardware Database' }} 
-    />
-    <HomeStack.Screen 
-      name="ProductList" 
-      component={ProductListScreen} 
-      options={({ route }) => ({ title: route.params.categoryName })} 
+      name="Home" 
+      component={HomeScreen} 
     />
     <HomeStack.Screen 
       name="ProductDetail" 
       component={ProductDetailScreen} 
-      options={{ title: 'Item Details' }} 
+      options={{ 
+        headerShown: true,
+        title: 'Item Details',
+        headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
+        headerTintColor: COLORS.onSurface,
+        headerTitleStyle: { fontFamily: FONTS.headline },
+        headerShadowVisible: false,
+      }} 
     />
   </HomeStack.Navigator>
 );
@@ -72,36 +70,39 @@ export const CustomerTabs = () => {
         name="HomeTab" 
         component={HomeStackNavigator} 
         options={{
-          tabBarLabel: 'Catalog',
-          tabBarIcon: ({ color }) => <MaterialIcons name="inventory" size={24} color={color} />
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color }) => <MaterialIcons name="home" size={24} color={color} />
+        }} 
+      />
+      <Tab.Screen 
+        name="ConsolesTab" 
+        component={ConsolesScreen} 
+        options={{
+          tabBarLabel: 'Consoles',
+          tabBarIcon: ({ color }) => <MaterialIcons name="videogame-asset" size={24} color={color} />
+        }} 
+      />
+      <Tab.Screen 
+        name="GamesTab" 
+        component={GamesScreen} 
+        options={{
+          tabBarLabel: 'Games',
+          tabBarIcon: ({ color }) => <MaterialIcons name="sports-esports" size={24} color={color} />
         }} 
       />
       <Tab.Screen 
         name="CartTab" 
         component={CartScreen} 
         options={{
-          tabBarLabel: 'Loadout',
+          tabBarLabel: 'Cart',
           headerShown: true,
           headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
           headerTintColor: COLORS.onSurface,
           headerTitleStyle: { fontFamily: FONTS.headline },
-          headerTitle: 'Active Loadout',
+          headerTitle: 'Your Cart',
           tabBarIcon: ({ color }) => <MaterialIcons name="shopping-cart" size={24} color={color} />,
           tabBarBadge: itemCount > 0 ? itemCount : undefined,
           tabBarBadgeStyle: { backgroundColor: COLORS.secondary, color: COLORS.onSurface, fontFamily: FONTS.label, fontSize: 10 }
-        }} 
-      />
-      <Tab.Screen 
-        name="OrdersTab" 
-        component={OrderHistoryScreen} 
-        options={{
-          tabBarLabel: 'Logs',
-          headerShown: true,
-          headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
-          headerTintColor: COLORS.onSurface,
-          headerTitleStyle: { fontFamily: FONTS.headline },
-          headerTitle: 'Transmission Logs',
-          tabBarIcon: ({ color }) => <MaterialIcons name="history" size={24} color={color} />
         }} 
       />
     </Tab.Navigator>

@@ -21,19 +21,17 @@ export type AdminStackParamList = {
   AdminOrders: undefined;
 };
 
-// The screens internally in the Customer's Home tab stack
 export type HomeStackParamList = {
-  Categories: undefined;
-  ProductList: { categoryId: string; categoryName: string };
+  Home: undefined;
   ProductDetail: { productId: string };
 };
 
-// The main Bottom Tabs for a regular customer
+// The main Bottom Tabs for a regular customer: Home, Consoles, Games, Cart
 export type CustomerTabParamList = {
   HomeTab: NavigatorScreenParams<HomeStackParamList>;
+  ConsolesTab: undefined;
+  GamesTab: undefined;
   CartTab: undefined;
-  OrdersTab: undefined;
-  ProfileTab: undefined; // Or Auth account settings
 };
 
 // The Root Navigator which decides which of the above to show
