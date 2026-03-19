@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Keyboard } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Keyboard, 
+  ImageBackground, 
+  StatusBar,
+  Dimensions
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../../navigation/types';
 import { useAuthStore } from '../../../store/authStore';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { CornerHighlight } from '../../../components/layout/CornerHighlight';
-import { MaterialIcons } from '@expo/vector-icons';
+import { PremiumInput } from '../../../components/ui/PremiumInput';
+import { PremiumButton } from '../../../components/ui/PremiumButton';
 import { isValidEmail, isValidPhone } from '../../../utils/formatting';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 };
+
+const { height } = Dimensions.get('window');
 
 export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
   const [name, setName] = useState('');
@@ -38,7 +47,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
       return;
     }
     if (!isValidPhone(phone)) {
-      setLocalError('Please enter a valid phone number (+XX XXX XXX).');
+      setLocalError('Please enter a valid phone number.');
       return;
     }
     if (password.length < 6) {
@@ -53,97 +62,106 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
         phone: phone.trim(),
         password,
       });
-      // Navigation handled automatically by RootNavigator listener
     } catch (err) {
       // Handled by Zustand
     }
   };
 
   return (
-    <ScreenWrapper scrollable padding={false} className="justify-center px-6 py-6">
+    <ScreenWrapper scrollable={true} withKeyboardAvoid={true} padding={false} className="bg-black">
+      <StatusBar barStyle="light-content" />
       
-      {/* Header Area */}
-      <View className="mb-6 flex-row items-center">
+      {/* Top Section with Astronaut Character */}
+      <ImageBackground
+        source={require('../../../../assets/auth-bg.png')}
+        style={{ width: '100%', height: height * 0.35 }}
+        resizeMode="cover"
+        className="justify-start items-start p-6"
+      >
         <TouchableOpacity 
-          className="w-10 h-10 rounded-full bg-surface-container justify-center items-center mr-4"
+          className="w-10 h-10 rounded-full bg-black/40 justify-center items-center"
           onPress={() => navigation.goBack()}
         >
           <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text className="font-headline font-bold text-2xl text-on-surface uppercase tracking-wider">
-          New Player
-        </Text>
-      </View>
+      </ImageBackground>
 
-      {/* Register Form Panel */}
-      <View className="glass-panel rounded-xl p-6 relative">
-        <CornerHighlight color="border-secondary" />
-        
-        <Input
-          label="Full Name"
-          placeholder="John Doe"
-          autoCapitalize="words"
-          value={name}
-          onChangeText={(text) => {
-            setName(text);
-            setLocalError('');
-          }}
-          icon={<MaterialIcons name="person" size={20} color="#d575ff" />}
-        />
+      {/* Bottom Section: Form */}
+      <View className="flex-1 bg-black px-8">
+        <View className="items-center mb-8">
+          <Text className="text-white text-3xl font-headline font-bold mb-1">
+            Sign up
+          </Text>
+          <View className="h-1 w-8 bg-secondary rounded-full" />
+        </View>
 
-        <Input
-          label="Email Address"
-          placeholder="player@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setLocalError('');
-          }}
-          icon={<MaterialIcons name="email" size={20} color="#d575ff" />}
-        />
+        <View className="mb-4">
+          <PremiumInput
+            placeholder="Username"
+            autoCapitalize="words"
+            value={name}
+            onChangeText={(text) => {
+              setName(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="person-outline" size={20} color="#adaaaa" />}
+          />
 
-        <Input
-          label="Phone Number"
-          placeholder="+235 XX XX XX XX"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={(text) => {
-            setPhone(text);
-            setLocalError('');
-          }}
-          icon={<MaterialIcons name="phone" size={20} color="#d575ff" />}
-        />
+          <PremiumInput
+            placeholder="Email id"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="mail-outline" size={20} color="#adaaaa" />}
+          />
 
-        <Input
-          label="Password"
-          placeholder="••••••••"
-          secureTextEntry
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            setLocalError('');
-          }}
-          icon={<MaterialIcons name="lock" size={20} color="#d575ff" />}
-        />
+          <PremiumInput
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="remove-red-eye" size={20} color="#adaaaa" />}
+          />
+
+          <Text className="text-[#adaaaa] text-[10px] text-center px-4 leading-4">
+            By registering you agree with our <Text className="text-white font-bold">Terms and Conditions</Text>
+          </Text>
+        </View>
 
         {(localError || error) ? (
-          <Text className="text-error font-body text-sm mb-4 text-center">
+          <Text className="text-error font-body text-xs mb-4 text-center">
             {localError || error}
           </Text>
         ) : null}
 
-        <Button
-          title="CREATE ACCOUNT"
-          variant="secondary"
+        <PremiumButton
+          title="Sign up"
           onPress={handleRegister}
           loading={isLoading}
-          className="mt-4"
-          icon={<MaterialIcons name="person-add" size={20} color="#d575ff" />}
+          className="mb-6"
         />
-      </View>
 
+        <View className="flex-row justify-center items-center pb-8">
+          <Text className="text-[#adaaaa] text-sm">
+            Already have an account?{' '}
+          </Text>
+          <TouchableOpacity onPress={() => {
+            clearError();
+            navigation.navigate('Login');
+          }}>
+            <Text className="text-secondary font-bold text-sm">
+              Login
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScreenWrapper>
   );
 };

@@ -1,25 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Keyboard } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Keyboard, 
+  ImageBackground, 
+  StatusBar,
+  Dimensions
+} from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../../navigation/types';
 import { useAuthStore } from '../../../store/authStore';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
-import { Input } from '../../../components/ui/Input';
-import { Button } from '../../../components/ui/Button';
-import { CornerHighlight } from '../../../components/layout/CornerHighlight';
-import { MaterialIcons } from '@expo/vector-icons';
+import { PremiumInput } from '../../../components/ui/PremiumInput';
+import { PremiumButton } from '../../../components/ui/PremiumButton';
 import { isValidEmail } from '../../../utils/formatting';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 };
+
+const { height } = Dimensions.get('window');
 
 export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
   
-  const { login, setGuestMode, isLoading, error, clearError } = useAuthStore();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
   const handleLogin = async () => {
     Keyboard.dismiss();
@@ -38,110 +47,91 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
     try {
       await login({ email: email.trim(), password });
-      // Navigation is handled automatically by RootNavigator based on auth state
     } catch (err) {
-      // Error is caught and stored in Zustand, but we don't need to do anything here
+      // Handled by Zustand
     }
   };
 
-  const handleGuest = () => {
-    setGuestMode(true);
-    // Navigation handled by RootNavigator
-  };
-
   return (
-    <ScreenWrapper scrollable padding={false} className="justify-center px-6">
+    <ScreenWrapper scrollable={false} withKeyboardAvoid={true} padding={false} className="bg-black">
+      <StatusBar barStyle="light-content" />
       
-      {/* Header Area */}
-      <View className="items-center mb-10">
-        <View className="w-20 h-20 rounded-full bg-primary/20 items-center justify-center mb-4 border border-primary/50 shadow-cyan-glow">
-          <MaterialIcons name="sports-esports" size={40} color="#8ff5ff" />
+      {/* Top Section with Astronaut Character */}
+      <ImageBackground
+        source={require('../../../../assets/auth-bg.png')}
+        style={{ width: '100%', height: height * 0.45 }}
+        resizeMode="cover"
+        className="justify-end items-center"
+      >
+        {/* Subtle overlay for better text readability if needed */}
+        <View className="absolute inset-0 bg-black/20" />
+      </ImageBackground>
+
+      {/* Bottom Section: Form */}
+      <View className="flex-1 bg-black px-8 pt-6">
+        <View className="items-center mb-8">
+          <Text className="text-white text-3xl font-headline font-bold mb-1">
+            Welcome Back!
+          </Text>
+          <View className="h-1 w-12 bg-primary rounded-full" />
         </View>
-        <Text className="font-headline font-bold text-3xl text-on-surface tracking-widest uppercase">
-          Cyber-Nexus
-        </Text>
-        <Text className="font-body text-primary text-sm tracking-widest mt-2 uppercase">
-          Level Up Your Gear
-        </Text>
-      </View>
 
-      {/* Login Form Panel */}
-      <View className="glass-panel rounded-xl p-6 relative">
-        <CornerHighlight color="border-primary" />
-        
-        <Text className="font-headline font-bold text-lg text-on-surface mb-6 uppercase">
-          Authentication
-        </Text>
+        <View className="mb-6">
+          <PremiumInput
+            placeholder="Username / Email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="person-outline" size={20} color="#adaaaa" />}
+          />
 
-        <Input
-          label="Email Address"
-          placeholder="player@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            setLocalError('');
-            clearError();
-          }}
-          icon={<MaterialIcons name="email" size={20} color="#8ff5ff" />}
-        />
+          <PremiumInput
+            placeholder="Password"
+            secureTextEntry
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setLocalError('');
+            }}
+            icon={<MaterialIcons name="lock-outline" size={20} color="#adaaaa" />}
+          />
 
-        <Input
-          label="Password"
-          placeholder="••••••••"
-          secureTextEntry
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            setLocalError('');
-            clearError();
-          }}
-          icon={<MaterialIcons name="lock" size={20} color="#8ff5ff" />}
-        />
+          <TouchableOpacity className="items-end mt-1">
+            <Text className="text-[#adaaaa] text-xs">Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
 
         {(localError || error) ? (
-          <Text className="text-error font-body text-sm mb-4 text-center">
+          <Text className="text-error font-body text-xs mb-4 text-center">
             {localError || error}
           </Text>
         ) : null}
 
-        <Button
-          title="INITIALIZE LOGIN"
+        <PremiumButton
+          title="Login"
           onPress={handleLogin}
           loading={isLoading}
-          className="mt-2 mb-4"
-          icon={<MaterialIcons name="login" size={20} color="#8ff5ff" />}
+          className="mb-6"
         />
 
         <View className="flex-row justify-center items-center">
-          <Text className="text-on-surface-variant font-body text-sm">
-            New player?{' '}
+          <Text className="text-[#adaaaa] text-sm">
+            Don't have an account?{' '}
           </Text>
           <TouchableOpacity onPress={() => {
             clearError();
             navigation.navigate('Register');
           }}>
-            <Text className="text-primary font-bold text-sm tracking-wider">
-              CREATE ACCOUNT
+            <Text className="text-primary font-bold text-sm">
+              Sign up
             </Text>
           </TouchableOpacity>
         </View>
       </View>
-
-      {/* Guest Mode Action */}
-      <View className="mt-8 items-center">
-        <Text className="text-on-surface-variant font-body text-xs uppercase tracking-widest mb-4">
-          Or Continue with limited access
-        </Text>
-        <Button
-          title="BROWSE AS GUEST"
-          variant="secondary"
-          onPress={handleGuest}
-          icon={<MaterialIcons name="travel-explore" size={20} color="#d575ff" />}
-        />
-      </View>
-
     </ScreenWrapper>
   );
 };

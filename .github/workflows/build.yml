@@ -40,4 +40,12 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          eas build --platform android --profile preview --non-interactive
+          eas build --platform android --profile preview --non-interactive --output=app.apk
+
+      - name: Upload APK Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaming-store-android-apk
+          path: app.apk
+          retention-days: 7
