@@ -11,6 +11,7 @@ import { Product } from '../types';
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
+  AdminLogin: undefined;
 };
 
 // The screens available to Admins
@@ -23,20 +24,25 @@ export type AdminStackParamList = {
 
 export type HomeStackParamList = {
   Home: undefined;
-  ProductDetail: { productId: string };
 };
 
 // The main Bottom Tabs for a regular customer: Home, Consoles, Games, Cart
 export type CustomerTabParamList = {
-  HomeTab: NavigatorScreenParams<HomeStackParamList>;
+  HomeTab: undefined;
   ConsolesTab: undefined;
+  AccessoriesTab: undefined;
   GamesTab: undefined;
   CartTab: undefined;
+};
+
+export type CustomerStackParamList = {
+  Tabs: NavigatorScreenParams<CustomerTabParamList>;
+  ProductDetail: { productId: string };
 };
 
 // The Root Navigator which decides which of the above to show
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
-  CustomerApp: NavigatorScreenParams<CustomerTabParamList>;
+  CustomerApp: NavigatorScreenParams<CustomerStackParamList>;
   AdminApp: NavigatorScreenParams<AdminStackParamList>;
 };

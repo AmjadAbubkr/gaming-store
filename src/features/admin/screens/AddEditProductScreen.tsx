@@ -10,10 +10,11 @@ import { Button } from '../../../components/ui/Button';
 import { CornerHighlight } from '../../../components/layout/CornerHighlight';
 import { COLORS } from '../../../constants/theme';
 import { CATEGORIES } from '../../../constants/categories';
-import { ProductCondition, ProductCategory } from '../../../types';
+import { Product, ProductCondition, ProductCategory } from '../../../types';
 import { useProductsStore } from '../../../store/productsStore';
-import * as storageService from '../../../services/firebase/storage';
 import * as firestoreService from '../../../services/firebase/firestore';
+import { isConsoleCategory, isGameCategory } from '../../../utils/productCategories';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 type Props = NativeStackScreenProps<AdminStackParamList, 'AddEditProduct'>;
 
@@ -22,17 +23,18 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
   const isEditing = !!productId;
   
   const { getProductById, addProductLocally, updateProductLocally } = useProductsStore();
+  const { t, textAlign, rowDirection, isRTL } = useI18n();
 
   // Form State
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [stock, setStock] = useState('');
-  const [category, setCategory] = useState<ProductCategory>('playstation');
+  const [category, setCategory] = useState<ProductCategory>('consoles');
   const [condition, setCondition] = useState<ProductCondition>('new');
   
-  // Image State (mix of existing URLs and local URIs to be uploaded)
-  const [images, setImages] = useState<{ uri: string; isLocal: boolean }[]>([]);
+  const [images, setImages] = useState<string[]>([]);
+  const [createdAt, setCreatedAt] = useState<Date>(new Date());
   
   const [isSaving, setIsSaving] = useState(false);
 
@@ -49,22 +51,23 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       setDescription(product.description);
       setPrice(product.price.toString());
       setStock(product.stock.toString());
-      setCategory(product.category);
+      setCategory(isConsoleCategory(product.category) ? 'consoles' : isGameCategory(product.category) ? 'games' : 'games');
       setCondition(product.condition);
-      setImages(product.images.map(url => ({ uri: url, isLocal: false })));
+      setImages(product.images);
+      setCreatedAt(product.createdAt);
     }
   };
 
   const pickImage = async () => {
     if (images.length >= 4) {
-      Alert.alert('Limit Reached', 'You can only upload up to 4 images per product.');
+      Alert.alert(t('admin.limitReached'), t('admin.imageLimitBody'));
       return;
     }
 
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      Alert.alert('Permission needed', 'You need to allow camera roll access to upload photos.');
+      Alert.alert(t('admin.permissionNeeded'), t('admin.permissionNeededBody'));
       return;
     }
 
@@ -72,11 +75,14 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1], // Square images look best in our cards
-      quality: 0.6, // Compress for bandwidth
+      quality: 0.35, // Compress harder to reduce Firestore payload size
+      base64: true,
     });
 
     if (!result.canceled && result.assets[0]) {
-      setImages([...images, { uri: result.assets[0].uri, isLocal: true }]);
+      const asset = result.assets[0];
+      const imageUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+      setImages([...images, imageUri]);
     }
   };
 
@@ -87,7 +93,7 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
   const handleSave = async () => {
     // Basic validation
     if (!name || !description || !price || !stock) {
-      Alert.alert('Incomplete', 'Please fill in all text fields.');
+      Alert.alert(t('admin.incomplete'), t('admin.incompleteBody'));
       return;
     }
 
@@ -97,7 +103,7 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       // 1. We need a product ID to upload images to the right folder
       // If new, generate a temporary ID or save first to get ID
       let currentProductId = productId;
-      
+
       const productData = {
         name,
         description,
@@ -105,90 +111,85 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
         stock: Number(stock),
         category,
         condition,
-        images: images.filter(img => !img.isLocal).map(img => img.uri), // Keep existing URLs
+        images,
       };
 
       if (!currentProductId) {
-        // Create product first to get ID
         const newProduct = await firestoreService.addProduct(productData);
         currentProductId = newProduct.id;
         addProductLocally(newProduct);
+        navigation.goBack();
+        return;
       }
 
-      // 2. Upload any local images
-      const localImages = images.filter(img => img.isLocal);
-      const uploadedUrls: string[] = [];
-      
-      for (const img of localImages) {
-        try {
-          const url = await storageService.uploadProductImage(img.uri, currentProductId!);
-          uploadedUrls.push(url);
-        } catch (e) {
-          console.warn('Failed to upload an image', e);
-        }
-      }
+      await firestoreService.updateProduct(currentProductId, productData);
 
-      // 3. Final update with all image URLs
-      const finalImageUrls = [...productData.images, ...uploadedUrls];
-      
-      if (isEditing || uploadedUrls.length > 0) {
-        await firestoreService.updateProduct(currentProductId!, { ...productData, images: finalImageUrls });
-        
-        // Update store locally
-        const updatedDoc = await getProductById(currentProductId!);
-        if (updatedDoc) updateProductLocally(updatedDoc);
-      }
+      const updatedProduct: Product = {
+        id: currentProductId,
+        createdAt,
+        ...productData,
+      };
 
-      Alert.alert('Success', 'Product catalog updated successfully.', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+      updateProductLocally(updatedProduct);
+      navigation.goBack();
       
     } catch (error) {
       console.error('Save failed:', error);
-      Alert.alert('Error', 'Failed to save product. Please check your connection.');
+      Alert.alert(t('cart.actionFailed'), t('admin.saveFailed'));
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <ScreenWrapper scrollable className="p-4 bg-background">
-      <View className="mb-6 flex-row items-center border-b border-surface-container-high/50 pb-4">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
-        </TouchableOpacity>
-        <Text className="font-headline font-bold text-xl text-on-surface uppercase tracking-wider flex-1">
-          {isEditing ? 'Configure Item' : 'New Catalog Entry'}
+    <ScreenWrapper scrollable className="bg-black px-4 py-4">
+      <View className="mb-6 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-high px-5 py-5">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className={`${isRTL ? 'ml-4' : 'mr-4'} h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/25`}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={COLORS.onSurface} />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-primary" style={{ textAlign }}>{t('admin.studio')}</Text>
+            <Text className="mt-2 font-headline text-2xl font-bold text-on-surface" style={{ textAlign }}>
+              {isEditing ? t('admin.editProduct') : t('admin.addProduct')}
+            </Text>
+          </View>
+        </View>
+        <Text className="mt-4 text-sm leading-6 text-on-surface-variant" style={{ textAlign }}>
+          {t('admin.addEditSubtitle')}
         </Text>
       </View>
 
-      <View className="glass-panel p-4 rounded-xl mb-6 relative">
+      <View className="mb-6 rounded-[28px] border border-white/10 bg-surface-container-high px-5 py-5 relative overflow-hidden">
         <CornerHighlight stroke={1} />
-        <Text className="font-headline text-primary uppercase tracking-widest text-sm mb-4">
-          Hardware Details
+        <Text className="font-headline text-primary uppercase tracking-widest text-sm mb-4" style={{ textAlign }}>
+          {t('admin.hardwareDetails')}
         </Text>
 
-        <Input label="Product Name" value={name} onChangeText={setName} placeholder="e.g. DualSense Edge" />
+        <Input label={t('admin.productName')} value={name} onChangeText={setName} placeholder={t('admin.productNamePlaceholder')} />
         
         <Input 
-          label="Description" 
+          label={t('admin.description')} 
           value={description} 
           onChangeText={setDescription} 
-          placeholder="Specs and details..." 
+          placeholder={t('admin.descriptionPlaceholder')} 
           multiline 
           numberOfLines={4} 
         />
         
         <View className="flex-row justify-between">
           <Input 
-            label="Price (FCFA)" 
+            label={t('admin.priceFcfa')} 
             value={price} 
             onChangeText={setPrice} 
             keyboardType="numeric" 
             className="w-[48%]" 
           />
           <Input 
-            label="Stock Amount" 
+            label={t('admin.stockAmount')} 
             value={stock} 
             onChangeText={setStock} 
             keyboardType="numeric" 
@@ -198,13 +199,13 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
 
         {/* Custom Selectors for Category and Condition would go here, 
             using simple row of buttons for simplicity in React Native */}
-        <Text className="font-label text-[10px] text-outline uppercase tracking-wider mb-2">Category</Text>
+        <Text className="font-label text-[10px] text-outline uppercase tracking-wider mb-2" style={{ textAlign }}>{t('admin.category')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
           {CATEGORIES.map(cat => (
             <TouchableOpacity 
               key={cat.id} 
               onPress={() => setCategory(cat.id)}
-              className={`px-4 py-2 rounded-lg border mr-2 ${category === cat.id ? 'bg-primary/20 border-primary' : 'bg-surface-container border-outline/30'}`}
+              className={`px-4 py-2 rounded-lg border ${isRTL ? 'ml-2' : 'mr-2'} ${category === cat.id ? 'bg-primary/20 border-primary' : 'bg-surface-container border-outline/30'}`}
             >
               <Text className={`font-label uppercase text-xs ${category === cat.id ? 'text-primary' : 'text-on-surface'}`}>
                 {cat.label}
@@ -213,16 +214,16 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
           ))}
         </ScrollView>
 
-        <Text className="font-label text-[10px] text-outline uppercase tracking-wider mb-2">Condition</Text>
-        <View className="flex-row mb-4">
+        <Text className="font-label text-[10px] text-outline uppercase tracking-wider mb-2" style={{ textAlign }}>{t('admin.condition')}</Text>
+        <View className="mb-4" style={{ flexDirection: rowDirection }}>
           {['new', 'used'].map(c => (
             <TouchableOpacity 
               key={c} 
               onPress={() => setCondition(c as ProductCondition)}
-              className={`px-6 py-2 rounded-lg border mr-4 ${condition === c ? 'bg-secondary/20 border-secondary' : 'bg-surface-container border-outline/30'}`}
+              className={`px-6 py-2 rounded-lg border ${isRTL ? 'ml-4' : 'mr-4'} ${condition === c ? 'bg-secondary/20 border-secondary' : 'bg-surface-container border-outline/30'}`}
             >
               <Text className={`font-label uppercase text-xs ${condition === c ? 'text-secondary' : 'text-on-surface'}`}>
-                {c.toUpperCase()}
+                {c === 'new' ? t('admin.new') : t('admin.used')}
               </Text>
             </TouchableOpacity>
           ))}
@@ -230,19 +231,19 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       </View>
 
       {/* Image Upload Section */}
-      <View className="glass-panel p-4 rounded-xl mb-6 relative">
+      <View className="mb-6 rounded-[28px] border border-white/10 bg-surface-container-high p-4 relative overflow-hidden">
          <CornerHighlight stroke={1} color="border-secondary" />
          <View className="flex-row justify-between items-center mb-4">
            <Text className="font-headline text-secondary uppercase tracking-widest text-sm">
-             Visual Assets
+             {t('admin.visualAssets')}
            </Text>
            <Text className="font-body text-outline text-xs">{images.length}/4</Text>
          </View>
 
-         <View className="flex-row flex-wrap">
+         <View className="flex-row flex-wrap" style={{ flexDirection: rowDirection, flexWrap: 'wrap' }}>
            {images.map((img, idx) => (
-             <View key={idx} className="w-[48%] aspect-square relative mb-2 mr-2">
-               <Image source={{ uri: img.uri }} className="w-full h-full rounded border border-outline-variant/50" />
+             <View key={idx} className={`w-[48%] aspect-square relative mb-2 ${isRTL ? 'ml-2' : 'mr-2'}`}>
+               <Image source={{ uri: img }} className="w-full h-full rounded border border-outline-variant/50" />
                <TouchableOpacity 
                  onPress={() => removeImage(idx)}
                  className="absolute top-1 right-1 bg-black/60 rounded-full p-1 border border-error/50"
@@ -255,17 +256,17 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
            {images.length < 4 && (
              <TouchableOpacity 
                onPress={pickImage}
-               className="w-[48%] aspect-square mb-2 bg-surface-container border border-dashed border-outline/50 rounded flex-col items-center justify-center pt-2"
+                className="w-[48%] aspect-square mb-2 bg-surface-container border border-dashed border-outline/50 rounded flex-col items-center justify-center pt-2"
              >
                <MaterialIcons name="add-photo-alternate" size={32} color={COLORS.outline} />
-               <Text className="font-label text-xs uppercase text-outline mt-2">Upload</Text>
+               <Text className="font-label text-xs uppercase text-outline mt-2">{t('admin.addPhoto')}</Text>
              </TouchableOpacity>
            )}
          </View>
       </View>
 
       <Button 
-        title={isEditing ? 'COMMIT CHANGES' : 'DEPLOY PROTOTYPE'} 
+        title={isSaving ? t('admin.saving') : t('admin.saveProduct')} 
         onPress={handleSave} 
         loading={isSaving} 
         className="mb-10 mt-2"

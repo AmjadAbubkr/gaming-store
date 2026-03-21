@@ -12,12 +12,14 @@ import * as authService from '../services/firebase/auth';
 
 interface AuthState {
   user: User | null;
+  isBootstrapping: boolean;
   isLoading: boolean;
   isGuest: boolean;
   error: string | null;
 
   // Actions
   login: (data: LoginData) => Promise<void>;
+  loginAsAdmin: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   setGuestMode: (isGuest: boolean) => void;
@@ -27,7 +29,8 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  isLoading: true, // Initially true while we check Firebase auth state
+  isBootstrapping: true,
+  isLoading: false,
   isGuest: false,
   error: null,
 
@@ -35,6 +38,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const user = await authService.login(data);
+      set({ user, isGuest: false, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
+  loginAsAdmin: async (data: LoginData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const user = await authService.login(data);
+
+      if (user.role !== 'admin') {
+        await authService.logout();
+        throw new Error('This account does not have admin access.');
+      }
+
       set({ user, isGuest: false, isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
@@ -64,11 +84,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   setGuestMode: (isGuest: boolean) => {
-    set({ isGuest, user: null, error: null });
+    set((state) => ({
+      isGuest,
+      user: isGuest ? null : state.user,
+      error: null,
+      isBootstrapping: false,
+    }));
   },
 
   setUser: (user: User | null) => {
-    set({ user, isLoading: false });
+    set({ user, isLoading: false, isBootstrapping: false });
   },
 
   clearError: () => {

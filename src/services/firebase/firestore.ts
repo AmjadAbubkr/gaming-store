@@ -31,6 +31,7 @@ import {
   Timestamp,
   serverTimestamp,
 } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { db } from './config';
 import { Product, ProductFormData, Order, OrderItem, OrderStatus } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
@@ -68,8 +69,26 @@ export const getProducts = async (
     constraints.push(startAfter(lastDoc));
   }
 
-  const q = query(productsRef, ...constraints);
-  const snapshot = await getDocs(q);
+  let snapshot;
+
+  try {
+    const q = query(productsRef, ...constraints);
+    snapshot = await getDocs(q);
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+
+    if (firebaseError.code !== 'failed-precondition' || !category || category === 'all') {
+      throw error;
+    }
+
+    // Fallback for projects missing the composite index for category + createdAt.
+    const fallbackConstraints: any[] = [
+      where('category', '==', category),
+      limit(APP_CONFIG.pagination.productsPerPage),
+    ];
+
+    snapshot = await getDocs(query(productsRef, ...fallbackConstraints));
+  }
 
   // Convert Firestore documents to our Product type
   const products: Product[] = snapshot.docs.map((doc) => ({
@@ -84,6 +103,22 @@ export const getProducts = async (
     : null;
 
   return { products, lastDocument };
+};
+
+export const getProductsByCategories = async (
+  categories: string[],
+  perCategoryLimit: number = APP_CONFIG.pagination.productsPerPage
+): Promise<Product[]> => {
+  const results = await Promise.allSettled(
+    categories.map(async (category) => {
+      const { products } = await getProducts(category);
+      return products.slice(0, perCategoryLimit);
+    })
+  );
+
+  return results
+    .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 };
 
 /**
@@ -181,14 +216,32 @@ export const createOrder = async (
  * Shows order history sorted by newest first.
  */
 export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
-  const q = query(
-    collection(db, APP_CONFIG.collections.orders),
-    where('userId', '==', userId),
-    orderBy('createdAt', 'desc'),
-    limit(APP_CONFIG.pagination.ordersPerPage)
-  );
+  let snapshot;
 
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(
+      collection(db, APP_CONFIG.collections.orders),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(APP_CONFIG.pagination.ordersPerPage)
+    );
+
+    snapshot = await getDocs(q);
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+
+    if (firebaseError.code !== 'failed-precondition') {
+      throw error;
+    }
+
+    snapshot = await getDocs(
+      query(
+        collection(db, APP_CONFIG.collections.orders),
+        where('userId', '==', userId),
+        limit(APP_CONFIG.pagination.ordersPerPage)
+      )
+    );
+  }
 
   return snapshot.docs.map((doc) => ({
     ...doc.data(),

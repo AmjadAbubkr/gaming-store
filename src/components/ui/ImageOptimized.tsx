@@ -24,6 +24,7 @@ export const ImageOptimized = ({
 }: ImageOptimizedProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const isEmbeddedImage = uri.startsWith('data:image/');
 
   // A subtle dark gradient placeholder
   const placeholderColor = COLORS.surfaceContainerHigh;
@@ -32,11 +33,11 @@ export const ImageOptimized = ({
     <View className={`overflow-hidden bg-[${placeholderColor}] items-center justify-center ${className}`} style={[style]}>
       
       <Image
-        source={uri}
+        source={{ uri }}
         style={[StyleSheet.absoluteFill, style]} // ensures image fills the wrapper
         contentFit={contentFit}
-        transition={300} // slight fade-in transition
-        cachePolicy="disk" // force aggressive disk caching
+        transition={isEmbeddedImage ? 0 : 300}
+        cachePolicy={isEmbeddedImage ? 'none' : 'disk'}
         onLoadStart={() => {
           setIsLoading(true);
           setIsError(false);

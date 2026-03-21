@@ -10,10 +10,10 @@ import { onAuthChange, getUserProfile } from '../services/firebase/auth';
 
 // Navigators
 import { CustomerTabs } from './CustomerTabs';
-import { AdminNavigator } from './AdminNavigator';
 import { RootStackParamList, AuthStackParamList } from './types';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
+import { AdminNavigator } from './AdminNavigator';
 
 // UI
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -30,7 +30,7 @@ const AuthNavigator = () => (
 );
 
 export const RootNavigator = () => {
-  const { user, isGuest, isLoading, setUser, setGuestMode } = useAuthStore();
+  const { user, isGuest, isBootstrapping, setUser, setGuestMode } = useAuthStore();
 
   useEffect(() => {
     // Listen for Firebase Auth state changes
@@ -40,8 +40,9 @@ export const RootNavigator = () => {
         try {
           const profile = await getUserProfile(firebaseUser.uid);
           setUser(profile);
-          // If they logged in, they are no longer a guest
-          setGuestMode(false);
+          if (isGuest) {
+            setGuestMode(false);
+          }
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
           setUser(null);
@@ -52,9 +53,9 @@ export const RootNavigator = () => {
     });
 
     return unsubscribe;
-  }, []);
+  }, [isGuest, setGuestMode, setUser]);
 
-  if (isLoading) {
+  if (isBootstrapping) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -62,17 +63,17 @@ export const RootNavigator = () => {
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="light" />
-        <RootStack.Navigator screenOptions={{ headerShown: false }}>
-          {/* Conditional Routing (Auth Guard) */}
+        <RootStack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
           {!user && !isGuest ? (
             // Needs Auth
             <RootStack.Screen name="Auth" component={AuthNavigator} />
-          ) : user?.role === 'admin' ? (
-            // Is Admin
-            <RootStack.Screen name="AdminApp" component={AdminNavigator} />
           ) : (
-            // Is Customer or Guest
-            <RootStack.Screen name="CustomerApp" component={CustomerTabs} />
+            <>
+              <RootStack.Screen name="CustomerApp" component={CustomerTabs} />
+              {user?.role === 'admin' ? (
+                <RootStack.Screen name="AdminApp" component={AdminNavigator} />
+              ) : null}
+            </>
           )}
         </RootStack.Navigator>
       </NavigationContainer>

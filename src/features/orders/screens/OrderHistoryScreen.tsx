@@ -101,7 +101,7 @@ export const OrderHistoryScreen = ({ navigation }: OrderHistoryProps) => {
               title="BROWSE GEAR" 
               variant="secondary"
               className="mt-8"
-              onPress={() => navigation.navigate('HomeTab', { screen: 'Home' })}
+              onPress={() => navigation.navigate('HomeTab')}
             />
           </View>
         )}

@@ -22,6 +22,7 @@ interface ProductsState {
   error: string | null;
   lastDocument: DocumentSnapshot | null;
   hasMore: boolean;
+  lastFetchedAt: number | null;
   
   // Current active filter
   activeCategory: string;
@@ -45,13 +46,19 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
   error: null,
   lastDocument: null,
   hasMore: true,
+  lastFetchedAt: null,
   activeCategory: 'all',
 
   fetchProducts: async (category = 'all', reset = false) => {
-    const { lastDocument, isLoading, isLoadingMore, productsMap } = get();
+    const { lastDocument, isLoading, isLoadingMore, productsMap, productsList, activeCategory, lastFetchedAt } = get();
     
     // Prevent overlapping fetches
     if (isLoading || (isLoadingMore && !reset)) return;
+
+    const cacheIsFresh = lastFetchedAt !== null && Date.now() - lastFetchedAt < 60_000;
+    if (reset && category === activeCategory && productsList.length > 0 && cacheIsFresh) {
+      return;
+    }
 
     if (reset) {
       set({ isLoading: true, error: null, lastDocument: null, hasMore: true, activeCategory: category });
@@ -75,6 +82,7 @@ export const useProductsStore = create<ProductsState>((set, get) => ({
         productsList: reset ? products : [...state.productsList, ...products],
         lastDocument: newLastDocument,
         hasMore: products.length > 0 && newLastDocument !== null,
+        lastFetchedAt: Date.now(),
         isLoading: false,
         isLoadingMore: false,
       }));

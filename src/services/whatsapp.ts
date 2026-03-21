@@ -77,24 +77,25 @@ export const openWhatsApp = async (
   message: string,
   phoneNumber?: string
 ): Promise<boolean> => {
-  const phone = phoneNumber || APP_CONFIG.whatsappNumber;
+  const phone = (phoneNumber || APP_CONFIG.whatsappNumber).replace(/[^\d]/g, '');
   const encodedMessage = encodeURIComponent(message);
-  const url = `https://wa.me/${phone}?text=${encodedMessage}`;
+  const nativeUrl = `whatsapp://send?phone=${phone}&text=${encodedMessage}`;
+  const webUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
 
   try {
-    // Check if the URL can be opened (WhatsApp is installed)
-    const canOpen = await Linking.canOpenURL(url);
+    const canOpenNative = await Linking.canOpenURL(nativeUrl);
 
-    if (!canOpen) {
-      throw new Error('WhatsApp is not installed on this device.');
+    if (canOpenNative) {
+      await Linking.openURL(nativeUrl);
+      return true;
     }
 
-    await Linking.openURL(url);
+    await Linking.openURL(webUrl);
     return true;
   } catch (error: any) {
     console.error('Failed to open WhatsApp:', error);
     throw new Error(
-      'Could not open WhatsApp. Please make sure WhatsApp is installed.'
+      'Could not open WhatsApp right now. Please check that WhatsApp or a browser is available on this device.'
     );
   }
 };

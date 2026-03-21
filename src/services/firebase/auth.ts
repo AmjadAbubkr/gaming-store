@@ -25,6 +25,8 @@ import { auth, db } from './config';
 import { User, RegisterData, LoginData } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
 
+const profileCache = new Map<string, User>();
+
 /**
  * Register a new user.
  * 1. Creates Firebase Auth account (email/password)
@@ -55,6 +57,7 @@ export const register = async (data: RegisterData): Promise<User> => {
       }
     );
 
+    profileCache.set(userData.id, userData);
     return userData;
   } catch (error: any) {
     // Re-throw with a more user-friendly message
@@ -77,6 +80,7 @@ export const login = async (data: LoginData): Promise<User> => {
       throw new Error('User profile not found. Please contact support.');
     }
 
+    profileCache.set(userProfile.id, userProfile);
     return userProfile;
   } catch (error: any) {
     throw new Error(getAuthErrorMessage(error.code));
@@ -88,6 +92,7 @@ export const login = async (data: LoginData): Promise<User> => {
  */
 export const logout = async (): Promise<void> => {
   await firebaseSignOut(auth);
+  profileCache.clear();
 };
 
 /**
@@ -95,17 +100,25 @@ export const logout = async (): Promise<void> => {
  * Returns null if the profile doesn't exist.
  */
 export const getUserProfile = async (uid: string): Promise<User | null> => {
+  const cachedProfile = profileCache.get(uid);
+  if (cachedProfile) {
+    return cachedProfile;
+  }
+
   const docRef = doc(db, APP_CONFIG.collections.users, uid);
   const docSnap = await getDoc(docRef);
 
   if (!docSnap.exists()) return null;
 
   const data = docSnap.data();
-  return {
+  const user = {
     ...data,
     id: docSnap.id,
     createdAt: new Date(data.createdAt),
   } as User;
+
+  profileCache.set(uid, user);
+  return user;
 };
 
 /**

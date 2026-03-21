@@ -12,33 +12,24 @@ import { Button } from '../../../components/ui/Button';
 import { CartItemCard } from '../components/CartItem';
 import { formatPrice } from '../../../utils/formatting';
 import { COLORS } from '../../../constants/theme';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 export const CartScreen = ({ navigation }: any) => {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCartStore();
   const { user, isGuest } = useAuthStore();
   const { createOrder } = useOrdersStore();
   const insets = useSafeAreaInsets();
-  
+  const { t } = useI18n();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCheckout = async () => {
-    // 1. Guard against empty cart
     if (items.length === 0) return;
 
-    // 2. Guard against unauthenticated checkout (required for order history)
     if (isGuest || !user) {
       Alert.alert(
-        'Login Required',
-        'Please create an account to place an order and track your history.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Login', onPress: () => {
-              // We'll let them login. But since the cart is persisted via Zustand, 
-              // it won't be lost when they leave to login!
-              // For a real app, you'd navigate out of the CustomerTabs here:
-              // Since they are technically in the root Guest state.
-          } },
-        ]
+        t('cart.loginRequired'),
+        t('cart.loginRequiredBody'),
+        [{ text: t('cart.cancel'), style: 'cancel' }, { text: t('auth.login') }]
       );
       return;
     }
@@ -46,35 +37,19 @@ export const CartScreen = ({ navigation }: any) => {
     setIsProcessing(true);
 
     try {
-      // 3. Save Order to Firestore (Important! Do this BEFORE WhatsApp redirect)
-      await createOrder(
-        user.id,
-        items,
-        total,
-        user.name,
-        user.phone
-      );
+      await createOrder(user.id, items, total, user.name, user.phone);
 
-      // 4. Generate WhatsApp Message
       const message = generateOrderMessage(items, total, user.name, user.phone);
-
-      // 5. Open WhatsApp
       const launched = await openWhatsApp(message);
 
       if (launched) {
-        // 6. Clear Cart on Success
         clearCart();
-        Alert.alert('Order Sent', 'Your order was saved and WhatsApp opened successfully.');
-        navigation.navigate('HomeTab', { screen: 'Home' });
+        Alert.alert(t('cart.orderSent'), t('cart.orderSentBody'));
       } else {
         throw new Error('WhatsApp failed to launch');
       }
-    } catch (error) {
-      Alert.alert(
-        'Action Failed',
-        'We could not open WhatsApp. Your order has been saved to your history — you can try again from there.',
-        [{ text: 'OK' }]
-      );
+    } catch {
+      Alert.alert(t('cart.actionFailed'), t('cart.actionFailedBody'), [{ text: 'OK' }]);
     } finally {
       setIsProcessing(false);
     }
@@ -82,19 +57,19 @@ export const CartScreen = ({ navigation }: any) => {
 
   if (items.length === 0) {
     return (
-      <ScreenWrapper className="justify-center items-center px-6">
-        <View className="w-24 h-24 rounded-full bg-surface-container items-center justify-center mb-6">
+      <ScreenWrapper className="justify-center items-center px-6 bg-black">
+        <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-surface-container">
           <MaterialIcons name="remove-shopping-cart" size={48} color={COLORS.outline} />
         </View>
-        <Text className="font-headline font-bold text-xl text-on-surface uppercase mb-2 text-center tracking-wider">
-          Empty Loadout
+        <Text className="mb-2 text-center font-headline text-xl font-bold uppercase tracking-wider text-on-surface">
+          {t('cart.emptyLoadout')}
         </Text>
-        <Text className="font-body text-on-surface-variant text-center mb-8">
-          Your inventory is currently empty. Visit the store to gear up.
+        <Text className="mb-8 text-center font-body text-on-surface-variant">
+          {t('cart.emptyBody')}
         </Text>
-        <Button 
-          title="RETURN TO HQ" 
-          onPress={() => navigation.navigate('HomeTab', { screen: 'Home' })} 
+        <Button
+          title={t('cart.returnToHQ')}
+          onPress={() => navigation.navigate('HomeTab')}
           variant="secondary"
           className="w-full"
         />
@@ -103,76 +78,82 @@ export const CartScreen = ({ navigation }: any) => {
   }
 
   return (
-    <ScreenWrapper padding={false} edges={['top', 'left', 'right', 'bottom']}>
-      {/* Header */}
-      <LinearGradient
-        colors={['#151515', '#0c0c0c']}
-        className="px-4 pb-4 pt-4"
-      >
-        <View className="flex-row justify-between items-center">
+    <ScreenWrapper padding={false} edges={['top', 'left', 'right', 'bottom']} className="bg-black">
+      <LinearGradient colors={['#171717', '#0b0b0b']} className="px-4 pb-5 pt-4">
+        <View className="mb-5 flex-row items-start justify-between">
           <View>
-            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">
-              Cart Overview
-            </Text>
-            <Text className="font-headline font-bold text-2xl text-on-surface">
-              Active Loadout
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">{t('cart.cartOverview')}</Text>
+            <Text className="font-headline text-2xl font-bold text-on-surface">{t('cart.activeLoadout')}</Text>
+            <Text className="mt-2 max-w-[260px] text-xs leading-5 text-on-surface-variant">
+              {t('cart.cartSubtitle')}
             </Text>
           </View>
-          <TouchableOpacity onPress={clearCart} className="rounded-full border border-error/30 bg-error/10 px-4 py-2">
-            <Text className="font-body text-xs text-error uppercase">Clear All</Text>
+          <TouchableOpacity onPress={clearCart} className="rounded-2xl border border-error/30 bg-error/10 px-4 py-3">
+            <Text className="font-body text-xs uppercase text-error">{t('cart.clearAll')}</Text>
           </TouchableOpacity>
         </View>
 
         <View className="mt-4 flex-row gap-3">
           <View className="flex-1 rounded-2xl border border-white/10 bg-surface-container-high/80 px-4 py-4">
-            <Text className="text-[10px] uppercase tracking-[3px] text-outline">Items</Text>
+            <Text className="text-[10px] uppercase tracking-[3px] text-outline">{t('home.items')}</Text>
             <Text className="mt-2 font-headline text-2xl font-bold text-on-surface">{itemCount}</Text>
           </View>
           <View className="flex-1 rounded-2xl border border-primary/20 bg-primary/10 px-4 py-4">
-            <Text className="text-[10px] uppercase tracking-[3px] text-primary">Total</Text>
+            <Text className="text-[10px] uppercase tracking-[3px] text-primary">{t('cart.total')}</Text>
             <Text className="mt-2 font-headline text-xl font-bold text-primary">{formatPrice(total)}</Text>
           </View>
         </View>
       </LinearGradient>
 
-      <View className="flex-1">
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.productId}
-          renderItem={({ item }) => (
-            <CartItemCard
-              item={item}
-              onIncrease={() => updateQuantity(item.productId, item.quantity + 1)}
-              onDecrease={() => {
-                if (item.quantity > 1) updateQuantity(item.productId, item.quantity - 1);
-                else removeItem(item.productId);
-              }}
-              onRemove={() => removeItem(item.productId)}
-            />
-          )}
-          contentContainerStyle={{ paddingBottom: 190 }}
-          ItemSeparatorComponent={() => <View className="h-3" />}
-          className="px-4 pt-4"
-        />
-      </View>
+      <FlatList
+        data={items}
+        keyExtractor={(item) => item.productId}
+        renderItem={({ item }) => (
+          <CartItemCard
+            item={item}
+            onIncrease={() => updateQuantity(item.productId, item.quantity + 1)}
+            onDecrease={() => {
+              if (item.quantity > 1) updateQuantity(item.productId, item.quantity - 1);
+              else removeItem(item.productId);
+            }}
+            onRemove={() => removeItem(item.productId)}
+          />
+        )}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: 18,
+          paddingBottom: 250 + Math.max(insets.bottom, 18),
+        }}
+        ItemSeparatorComponent={() => <View className="h-4" />}
+        ListHeaderComponent={
+          <View className="mb-4 rounded-[24px] border border-white/10 bg-surface-container-high/65 px-5 py-4">
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-primary">{t('cart.missionBrief')}</Text>
+            <Text className="mt-2 text-sm leading-6 text-on-surface-variant">
+              {t('cart.missionBody')}
+            </Text>
+          </View>
+        }
+        className="bg-black"
+      />
 
-      {/* Checkout Footer */}
       <View
-        className="absolute bottom-0 left-0 right-0 border-t border-outline-variant/30 bg-surface-container px-4 pt-4"
-        style={{ paddingBottom: Math.max(insets.bottom, 14) }}
+        className="absolute left-4 right-4 rounded-[28px] border border-white/10 bg-surface-container px-5 pt-5"
+        style={{ bottom: Math.max(insets.bottom, 14) + 84, paddingBottom: 16 }}
       >
         <View className="mb-4 flex-row items-end justify-between">
           <View>
-            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">Checkout</Text>
-            <Text className="font-body text-sm text-on-surface-variant">Secure your loadout and send the order to HQ.</Text>
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">{t('cart.checkout')}</Text>
+            <Text className="mt-1 max-w-[220px] font-body text-sm leading-5 text-on-surface-variant">
+              {t('cart.checkoutBody')}
+            </Text>
           </View>
-          <Text className="font-headline font-bold text-2xl text-whatsapp-green tracking-wider">
+          <Text className="font-headline text-2xl font-bold tracking-wider text-whatsapp-green">
             {formatPrice(total)}
           </Text>
         </View>
 
         <Button
-          title="Transmit To HQ Via WhatsApp"
+          title={t('cart.checkoutWhatsapp')}
           variant="whatsapp"
           onPress={handleCheckout}
           loading={isProcessing}

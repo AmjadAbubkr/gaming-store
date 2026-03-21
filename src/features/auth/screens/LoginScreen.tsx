@@ -5,6 +5,7 @@ import {
   TouchableOpacity, 
   Keyboard, 
   ImageBackground, 
+  Image,
   StatusBar,
   Dimensions
 } from 'react-native';
@@ -16,6 +17,7 @@ import { PremiumInput } from '../../../components/ui/PremiumInput';
 import { PremiumButton } from '../../../components/ui/PremiumButton';
 import { isValidEmail } from '../../../utils/formatting';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 type LoginScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -29,6 +31,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [localError, setLocalError] = useState('');
   
   const { login, isLoading, error, clearError } = useAuthStore();
+  const { t, textAlign } = useI18n();
 
   const handleLogin = async () => {
     Keyboard.dismiss();
@@ -36,12 +39,12 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     clearError();
 
     if (!email || !password) {
-      setLocalError('Please fill in all fields.');
+      setLocalError(t('auth.fillAllFields'));
       return;
     }
     
     if (!isValidEmail(email)) {
-      setLocalError('Please enter a valid email address.');
+      setLocalError(t('auth.invalidEmail'));
       return;
     }
 
@@ -64,11 +67,19 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       <StatusBar barStyle="light-content" />
       <View className="flex-1 bg-black px-5 pb-10">
         <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
+          <View className="absolute left-4 top-4 z-20 h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/55">
+            <Image
+              source={require('../../../../assets/icon.png')}
+              style={{ width: 34, height: 34 }}
+              resizeMode="contain"
+            />
+          </View>
+
           <ImageBackground
-            source={require('../../../../assets/auth-bg.png')}
+            source={require('../../../../assets/hero-spidey.png')}
             style={{ width: '100%', height: height * 0.36 }}
             resizeMode="contain"
-            imageStyle={{ marginTop: 18 }}
+            imageStyle={{ marginTop: 10 }}
             className="justify-end items-center bg-[#070707]"
           >
             <View className="absolute inset-0 bg-black/20" />
@@ -78,17 +89,17 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
         <View className="mt-[-30] rounded-[28px] border border-white/10 bg-[#111111] px-6 py-7">
           <View className="items-center mb-8">
             <Text className="text-white text-3xl font-headline font-bold mb-1">
-              Welcome Back
+              {t('auth.welcomeBack')}
             </Text>
             <Text className="text-[#9c9898] text-xs uppercase tracking-[3px]">
-              Enter the vault
+              {t('auth.enterTheVault')}
             </Text>
             <View className="mt-4 h-1 w-14 bg-primary rounded-full" />
           </View>
 
           <View className="mb-6">
             <PremiumInput
-              placeholder="Email address"
+              placeholder={t('auth.emailAddress')}
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
@@ -100,7 +111,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
             />
 
             <PremiumInput
-              placeholder="Password"
+              placeholder={t('auth.password')}
               secureTextEntry
               value={password}
               onChangeText={(text) => {
@@ -111,7 +122,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
             />
 
             <TouchableOpacity className="items-end mt-1">
-              <Text className="text-[#adaaaa] text-xs">Forgot Password?</Text>
+              <Text className="text-[#adaaaa] text-xs" style={{ textAlign }}>{t('auth.forgotPassword')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -122,7 +133,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
           ) : null}
 
           <PremiumButton
-            title="Login"
+            title={t('auth.login')}
             onPress={handleLogin}
             loading={isLoading}
             className="mb-6"
@@ -130,14 +141,14 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
 
           <View className="flex-row justify-center items-center">
             <Text className="text-[#adaaaa] text-sm">
-              Don't have an account?{' '}
+              {t('auth.noAccount')}{' '}
             </Text>
             <TouchableOpacity onPress={() => {
               clearError();
               navigation.navigate('Register');
             }}>
               <Text className="text-primary font-bold text-sm">
-                Sign up
+                {t('auth.signUp')}
               </Text>
             </TouchableOpacity>
           </View>

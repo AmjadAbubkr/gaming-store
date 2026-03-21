@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { HomeStackParamList } from '../../../navigation/types';
+import { CustomerStackParamList } from '../../../navigation/types';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
 import { ImageOptimized } from '../../../components/ui/ImageOptimized';
 import { Button } from '../../../components/ui/Button';
@@ -12,8 +12,9 @@ import { useProductsStore } from '../../../store/productsStore';
 import { useCartStore } from '../../../store/cartStore';
 import { Product } from '../../../types';
 import { COLORS } from '../../../constants/theme';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
-type Props = NativeStackScreenProps<HomeStackParamList, 'ProductDetail'>;
+type Props = NativeStackScreenProps<CustomerStackParamList, 'ProductDetail'>;
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
   
   const getProductById = useProductsStore(s => s.getProductById);
   const addItemToCart = useCartStore(s => s.addItem);
+  const { t, textAlign } = useI18n();
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -42,8 +44,8 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
   if (!product) {
     return (
       <View className="flex-1 bg-background justify-center items-center p-6">
-        <Text className="text-error font-headline text-lg uppercase mb-4">Product Not Found</Text>
-        <Button title="Go Back" onPress={() => navigation.goBack()} variant="secondary" />
+        <Text className="text-error font-headline text-lg uppercase mb-4" style={{ textAlign }}>{t('product.notFound')}</Text>
+        <Button title={t('product.goBack')} onPress={() => navigation.goBack()} variant="secondary" />
       </View>
     );
   }
@@ -96,7 +98,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
       {/* Product Info Area */}
       <View className="p-6">
         <View className="flex-row justify-between items-start mb-2">
-          <Text className="font-headline font-bold text-2xl text-on-surface flex-1 mr-4">
+          <Text className="font-headline font-bold text-2xl text-on-surface flex-1 mr-4" style={{ textAlign }}>
             {product.name}
           </Text>
           <Text className="font-headline font-bold text-xl text-primary">
@@ -108,25 +110,25 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
         <View className="flex-row space-x-3 mb-6">
           <View className={`px-3 py-1 rounded border ${product.condition === 'new' ? 'border-primary/50 bg-primary/10' : 'border-secondary/50 bg-secondary/10'}`}>
             <Text className={`font-label text-xs uppercase ${product.condition === 'new' ? 'text-primary' : 'text-secondary'}`}>
-              Condition: {product.condition}
+              {t('product.conditionLabel', { value: product.condition })}
             </Text>
           </View>
           
           <View className={`px-3 py-1 rounded border ${isOutOfStock ? 'border-error/50 bg-error/10' : 'border-primary-dim/50 bg-primary-dim/10'}`}>
             <Text className={`font-label text-xs uppercase ${isOutOfStock ? 'text-error' : 'text-primary-dim'}`}>
-              {isOutOfStock ? 'Out of Stock' : `${product.stock} Available`}
+              {isOutOfStock ? t('product.outOfStock') : t('product.available', { count: product.stock })}
             </Text>
           </View>
         </View>
 
         {/* Description Section */}
         <View className="mb-8">
-          <Text className="font-headline text-sm text-primary mb-2 uppercase tracking-widest">
-            Hardware Specs / Details
+          <Text className="font-headline text-sm text-primary mb-2 uppercase tracking-widest" style={{ textAlign }}>
+            {t('product.specs')}
           </Text>
           <View className="h-[1px] w-full bg-outline-variant/30 mb-4" />
-          <Text className="font-body text-base text-on-surface-variant leading-relaxed">
-            {product.description || 'No description provided.'}
+          <Text className="font-body text-base text-on-surface-variant leading-relaxed" style={{ textAlign }}>
+            {product.description || t('product.noDescription')}
           </Text>
         </View>
 
@@ -135,7 +137,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
       {/* Fixed Bottom Action Bar Space (actual bar is placed relatively here) */}
       <View className="px-6 mb-6">
         <Button 
-          title={isOutOfStock ? "SOLD OUT" : "ADD TO LOADOUT"}
+          title={isOutOfStock ? t('product.soldOut') : t('product.addToLoadout')}
           disabled={isOutOfStock}
           onPress={handleAddToCart}
           icon={<MaterialIcons name="add-shopping-cart" size={20} color={isOutOfStock ? COLORS.outline : COLORS.primary} />}

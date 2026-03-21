@@ -10,6 +10,7 @@ import { useOrdersStore } from '../../../store/ordersStore';
 import { openWhatsApp } from '../../../services/whatsapp';
 import { COLORS } from '../../../constants/theme';
 import * as firestoreService from '../../../services/firebase/firestore';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 type AdminOrdersProps = {
   navigation: NativeStackNavigationProp<AdminStackParamList, 'AdminOrders'>;
@@ -18,6 +19,7 @@ type AdminOrdersProps = {
 export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
   const { orders, fetchAllOrders, isLoading, updateOrderStatusLocally } = useOrdersStore();
   const [activeFilter, setActiveFilter] = useState<'all' | 'pending' | 'sent_whatsapp'>('all');
+  const { t, textAlign, isRTL } = useI18n();
 
   useEffect(() => {
     fetchAllOrders(); // Loads everything on mount
@@ -27,18 +29,18 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
     if (currentStatus !== 'pending') return; // Can only transition from pending
 
     Alert.alert(
-      'Update Transmission Status',
-      'Confirm this order has been processed via WhatsApp?',
+      t('admin.updateTransmission'),
+      t('admin.updateTransmissionBody'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cart.cancel'), style: 'cancel' },
         { 
-          text: 'Confirm', 
+          text: t('admin.confirm'), 
           onPress: async () => {
             try {
               await firestoreService.updateOrderStatus(orderId, 'sent_whatsapp');
               updateOrderStatusLocally(orderId, 'sent_whatsapp');
             } catch (err) {
-              Alert.alert('Error', 'Failed to update order status');
+              Alert.alert(t('cart.actionFailed'), t('admin.updateOrderFailed'));
             }
           } 
         }
@@ -48,14 +50,14 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
 
   const contactCustomer = async (phone: string, name: string) => {
     if (!phone) {
-      Alert.alert('No Number', 'Customer did not provide a phone number.');
+      Alert.alert(t('admin.noNumber'), t('admin.noNumberBody'));
       return;
     }
     const message = `Hello ${name}, this is Cyber-Nexus store. Regarding your recent equipment order...`;
     try {
       await openWhatsApp(message, phone);
     } catch (e) {
-      Alert.alert('Failed to launch WhatsApp');
+      Alert.alert(t('cart.actionFailed'), t('admin.failedLaunchWhatsapp'));
     }
   };
 
@@ -64,25 +66,30 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
   );
 
   return (
-    <ScreenWrapper padding={false}>
-      
-      {/* Header */}
-      <View className="px-4 py-4 bg-surface-container-highest border-b border-surface-container-high/50">
-        <View className="flex-row items-center mb-4">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-            <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
+    <ScreenWrapper padding={false} className="bg-black">
+      <View className="mx-4 mt-4 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-high px-5 py-5">
+        <View className="mb-4 flex-row items-center">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className={`${isRTL ? 'ml-4' : 'mr-4'} h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/25`}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={COLORS.onSurface} />
           </TouchableOpacity>
-          <Text className="font-headline font-bold text-xl text-on-surface uppercase tracking-wider flex-1">
-            Incoming Transmissions
-          </Text>
+          <View className="flex-1">
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-primary" style={{ textAlign }}>{t('admin.studio')}</Text>
+            <Text className="mt-2 font-headline text-2xl font-bold text-on-surface" style={{ textAlign }}>{t('admin.orderCenter')}</Text>
+          </View>
         </View>
 
-        {/* Filter Tabs */}
-        <View className="flex-row border border-outline-variant/30 rounded-lg overflow-hidden h-10 bg-surface-container">
+        <Text className="mb-4 text-sm leading-6 text-on-surface-variant" style={{ textAlign }}>
+          {t('admin.orderCenterBody')}
+        </Text>
+
+        <View className="h-11 flex-row overflow-hidden rounded-2xl border border-outline-variant/30 bg-surface-container">
           {[
-            { id: 'all', label: 'All Log' },
-            { id: 'pending', label: 'Pending' },
-            { id: 'sent_whatsapp', label: 'Resolved' }
+            { id: 'all', label: t('admin.allLog') },
+            { id: 'pending', label: t('admin.pending') },
+            { id: 'sent_whatsapp', label: t('admin.resolved') }
           ].map(tab => (
             <TouchableOpacity
               key={tab.id}
@@ -101,7 +108,7 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
       <FlatList
         data={filteredOrders}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={fetchAllOrders} tintColor={COLORS.primary} />
         }
@@ -113,7 +120,7 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
             {/* Admin Action Bar underneath the card */}
             <View className="flex-row space-x-2 mt-[-8px] z-10 mx-2">
               <Button 
-                title="MESSAGE CLIENT" 
+                title={t('admin.messageClient')} 
                 variant="whatsapp"
                 onPress={() => contactCustomer(item.userPhone || '', item.userName || '')}
                 className="flex-1 py-3"
@@ -121,7 +128,7 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
               />
               {item.status === 'pending' && (
                 <Button 
-                  title="RESOLVE" 
+                  title={t('admin.resolve')} 
                   variant="primary"
                   onPress={() => handleStatusChange(item.id, item.status)}
                   className="flex-1 py-3 bg-surface-container border border-primary text-primary"
@@ -133,8 +140,8 @@ export const AdminOrdersScreen = ({ navigation }: AdminOrdersProps) => {
         ListEmptyComponent={() => (
            <View className="items-center justify-center p-8 mt-10 flex-col">
              <MaterialIcons name="inbox" size={48} color={COLORS.outline} />
-             <Text className="font-headline text-lg uppercase tracking-wider text-outline mt-4">
-               No Transmissions Found
+             <Text className="font-headline text-lg uppercase tracking-wider text-outline mt-4" style={{ textAlign }}>
+               {t('admin.noOrdersFound')}
              </Text>
            </View>
         )}

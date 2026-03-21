@@ -16,6 +16,7 @@ import { PremiumInput } from '../../../components/ui/PremiumInput';
 import { PremiumButton } from '../../../components/ui/PremiumButton';
 import { isValidEmail, isValidPhone } from '../../../utils/formatting';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 type RegisterScreenProps = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Register'>;
@@ -31,6 +32,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
   const [localError, setLocalError] = useState('');
   
   const { register, isLoading, error, clearError } = useAuthStore();
+  const { t } = useI18n();
 
   const handleRegister = async () => {
     Keyboard.dismiss();
@@ -39,19 +41,19 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
 
     // Validation
     if (!name || !email || !phone || !password) {
-      setLocalError('Please fill in all fields.');
+      setLocalError(t('auth.fillAllFields'));
       return;
     }
     if (!isValidEmail(email)) {
-      setLocalError('Please enter a valid email address.');
+      setLocalError(t('auth.invalidEmail'));
       return;
     }
     if (!isValidPhone(phone)) {
-      setLocalError('Please enter a valid phone number.');
+      setLocalError(t('auth.invalidPhone'));
       return;
     }
     if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters.');
+      setLocalError(t('auth.passwordMin'));
       return;
     }
 
@@ -80,7 +82,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
       <View className="flex-1 bg-black px-5 pb-10">
         <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
           <ImageBackground
-            source={require('../../../../assets/auth-bg.png')}
+            source={require('../../../../assets/hero-spidey.png')}
             style={{ width: '100%', height: height * 0.32 }}
             resizeMode="contain"
             imageStyle={{ marginTop: 8, alignSelf: 'center' }}
@@ -98,17 +100,17 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
         <View className="mt-[-22] rounded-[28px] border border-white/10 bg-[#111111] px-6 py-7">
           <View className="items-center mb-8">
             <Text className="text-white text-3xl font-headline font-bold mb-1">
-              Create Account
+              {t('auth.createAccount')}
             </Text>
             <Text className="text-[#9c9898] text-xs uppercase tracking-[3px]">
-              Join the nexus
+              {t('auth.joinTheNexus')}
             </Text>
             <View className="mt-4 h-1 w-10 bg-secondary rounded-full" />
           </View>
 
           <View className="mb-4">
             <PremiumInput
-              placeholder="Username"
+              placeholder={t('auth.username')}
               autoCapitalize="words"
               value={name}
               onChangeText={(text) => {
@@ -119,7 +121,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
             />
 
             <PremiumInput
-              placeholder="Email id"
+              placeholder={t('auth.emailId')}
               keyboardType="email-address"
               autoCapitalize="none"
               value={email}
@@ -131,7 +133,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
             />
 
             <PremiumInput
-              placeholder="Phone number"
+              placeholder={t('auth.phoneNumber')}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={(text) => {
@@ -142,7 +144,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
             />
 
             <PremiumInput
-              placeholder="Password"
+              placeholder={t('auth.password')}
               secureTextEntry
               value={password}
               onChangeText={(text) => {
@@ -153,7 +155,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
             />
 
             <Text className="text-[#adaaaa] text-[10px] text-center px-4 leading-4">
-              By registering you agree with our <Text className="text-white font-bold">Terms and Conditions</Text>
+              {t('auth.terms')}
             </Text>
           </View>
 
@@ -164,7 +166,7 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
           ) : null}
 
           <PremiumButton
-            title="Sign up"
+            title={t('auth.signUp')}
             onPress={handleRegister}
             loading={isLoading}
             className="mb-6"
@@ -172,14 +174,14 @@ export const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
 
           <View className="flex-row justify-center items-center pb-2">
             <Text className="text-[#adaaaa] text-sm">
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
             </Text>
             <TouchableOpacity onPress={() => {
               clearError();
               navigation.navigate('Login');
             }}>
               <Text className="text-secondary font-bold text-sm">
-                Login
+                {t('auth.login')}
               </Text>
             </TouchableOpacity>
           </View>

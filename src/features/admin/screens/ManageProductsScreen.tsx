@@ -11,6 +11,7 @@ import { useProductsStore } from '../../../store/productsStore';
 import { formatPrice } from '../../../utils/formatting';
 import { COLORS } from '../../../constants/theme';
 import * as firestoreService from '../../../services/firebase/firestore';
+import { useI18n } from '../../../localization/LocalizationProvider';
 
 type ManageProductsProps = {
   navigation: NativeStackNavigationProp<AdminStackParamList, 'ManageProducts'>;
@@ -19,6 +20,7 @@ type ManageProductsProps = {
 export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
   const { productsList, fetchProducts, isLoading, removeProductLocally } = useProductsStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const { t, textAlign, rowDirection, isRTL } = useI18n();
 
   useEffect(() => {
     // Ensure we have all products loaded
@@ -27,12 +29,12 @@ export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
 
   const handleDelete = (id: string, name: string) => {
     Alert.alert(
-      'Initialize Deletion',
-      `Are you sure you want to permanently delete "${name}" from the database?`,
+      t('admin.deleteInit'),
+      t('admin.deleteConfirmBody', { name }),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('cart.cancel'), style: 'cancel' },
         { 
-          text: 'Delete', 
+          text: t('admin.delete'), 
           style: 'destructive',
           onPress: async () => {
             try {
@@ -43,7 +45,7 @@ export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
               // Note: We skip deleting the images from Storage to keep it simple, 
               // but ideally we'd map over images array and delete them too.
             } catch (error) {
-              Alert.alert('Error', 'Failed to delete product');
+              Alert.alert(t('cart.actionFailed'), t('admin.deleteFailed'));
             }
           }
         }
@@ -58,28 +60,34 @@ export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
   );
 
   return (
-    <ScreenWrapper padding={false}>
-      
-      {/* Header & Search */}
-      <View className="px-4 py-4 bg-surface-container-highest border-b border-surface-container-high/50">
-        <View className="flex-row items-center mb-4">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-            <MaterialIcons name="arrow-back" size={24} color={COLORS.onSurface} />
+    <ScreenWrapper padding={false} className="bg-black">
+      <View className="mx-4 mt-4 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-high px-5 py-5">
+        <View className="mb-4 flex-row items-center">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className={`${isRTL ? 'ml-4' : 'mr-4'} h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-black/25`}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={COLORS.onSurface} />
           </TouchableOpacity>
-          <Text className="font-headline font-bold text-xl text-on-surface uppercase tracking-wider flex-1">
-            Database Log
-          </Text>
+          <View className="flex-1">
+            <Text className="font-label text-[10px] uppercase tracking-[3px] text-primary" style={{ textAlign }}>{t('admin.studio')}</Text>
+            <Text className="mt-2 font-headline text-2xl font-bold text-on-surface" style={{ textAlign }}>{t('admin.manageProducts')}</Text>
+          </View>
           <TouchableOpacity 
             onPress={() => navigation.navigate('AddEditProduct', {})}
-            className="w-10 h-10 bg-primary/20 rounded-lg justify-center items-center border border-primary/50 shadow-cyan-glow"
+            className="h-11 w-11 items-center justify-center rounded-2xl border border-primary/40 bg-primary/15"
           >
             <MaterialIcons name="add" size={24} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
 
+        <Text className="mb-4 text-sm leading-6 text-on-surface-variant" style={{ textAlign }}>
+          {t('admin.manageProductsSubtitle')}
+        </Text>
+
         <Input
           label=""
-          placeholder="Search catalog..."
+          placeholder={t('admin.searchCatalog')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           icon={<MaterialIcons name="search" size={20} color={COLORS.outline} />}
@@ -91,41 +99,41 @@ export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
       <FlatList
         data={filteredProducts}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         refreshing={isLoading}
         onRefresh={() => fetchProducts('all', true)}
         renderItem={({ item }) => (
-          <View className="glass-panel p-3 rounded-lg mb-3 flex-row items-center relative">
+          <View className="relative mb-4 overflow-hidden rounded-[24px] border border-white/10 bg-surface-container-high/80 p-4" style={{ flexDirection: rowDirection, alignItems: 'center' }}>
             
-            {/* Thumbnail */}
-            <View className="w-16 h-16 bg-surface-container-low rounded mr-3">
+            <View className={`${isRTL ? 'ml-4' : 'mr-4'} h-20 w-20 overflow-hidden rounded-2xl bg-surface-container-low`}>
                <ImageOptimized 
                  uri={item.images?.[0] || 'https://via.placeholder.com/100'} 
                  style={{ width: '100%', height: '100%' }}
+                 contentFit="cover"
                />
             </View>
 
-            {/* Info */}
             <View className="flex-1 justify-center">
-              <Text className="font-headline font-bold text-sm text-on-surface mb-1" numberOfLines={1}>
+              <Text className="mb-1 font-headline text-base font-bold text-on-surface" numberOfLines={1}>
                 {item.name}
               </Text>
-              <Text className="font-body text-xs text-primary mb-1">
+              <Text className="mb-2 font-body text-xs text-primary">
                 {formatPrice(item.price)}
               </Text>
-              <View className="flex-row">
-                <Text className="font-label text-[10px] uppercase text-outline mr-2">{item.category}</Text>
+              <View style={{ flexDirection: rowDirection, alignItems: 'center' }}>
+                <View className={`${isRTL ? 'ml-2' : 'mr-2'} rounded-full border border-white/10 bg-black/25 px-2 py-1`}>
+                  <Text className="font-label text-[10px] uppercase text-outline">{item.category}</Text>
+                </View>
                 <Text className={`font-label text-[10px] uppercase font-bold tracking-wider ${item.stock <= 0 ? 'text-error' : 'text-whatsapp-green'}`}>
-                  Stock: {item.stock}
+                  {t('admin.stock')}: {item.stock}
                 </Text>
               </View>
             </View>
 
-            {/* Actions */}
-            <View className="flex-col justify-between items-center ml-2 space-y-2 h-full py-1">
+            <View className={`${isRTL ? 'mr-2' : 'ml-2'} flex-col items-center justify-between py-1`}>
               <TouchableOpacity
                 onPress={() => navigation.navigate('AddEditProduct', { productId: item.id })}
-                className="p-2 rounded-full bg-secondary/20"
+                className="mb-2 rounded-full bg-secondary/20 p-2.5"
               >
                 <MaterialIcons name="edit" size={16} color={COLORS.secondary} />
               </TouchableOpacity>
@@ -140,8 +148,11 @@ export const ManageProductsScreen = ({ navigation }: ManageProductsProps) => {
           </View>
         )}
         ListEmptyComponent={() => (
-           <View className="items-center justify-center p-8 mt-10">
-              <Text className="font-headline text-lg uppercase tracking-wider text-outline">No products found</Text>
+           <View className="mt-10 items-center justify-center p-8">
+              <Text className="font-headline text-lg uppercase tracking-wider text-outline" style={{ textAlign }}>{t('admin.noProductsFound')}</Text>
+              <Text className="mt-3 text-center text-sm leading-6 text-on-surface-variant" style={{ textAlign }}>
+                {t('admin.noProductsFoundBody')}
+              </Text>
            </View>
         )}
       />

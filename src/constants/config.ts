@@ -13,7 +13,7 @@ export const APP_CONFIG = {
   // WhatsApp integration — REPLACE with your actual store number
   // Format: country code + number, no spaces or dashes
   // Chad country code is +235
-  whatsappNumber: '235XXXXXXXX',
+  whatsappNumber: (process.env.EXPO_PUBLIC_WHATSAPP_NUMBER || '+23565032926').replace(/[^\d]/g, ''),
 
   // Currency settings for Chad (Central African CFA franc)
   currency: 'FCFA',
