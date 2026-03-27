@@ -4,7 +4,7 @@ export const translations = {
   en: {
     auth: {
       welcomeBack: 'Welcome Back',
-      enterTheVault: 'Enter the vault',
+      enterTheVault: 'Enter your credentials to login',
       emailAddress: 'Email address',
       password: 'Password',
       forgotPassword: 'Forgot Password?',
@@ -158,7 +158,7 @@ export const translations = {
   fr: {
     auth: {
       welcomeBack: 'Bon retour',
-      enterTheVault: 'Entrez dans le coffre',
+      enterTheVault: 'Entrez vos identifiants pour continuer',
       emailAddress: 'Adresse e-mail',
       password: 'Mot de passe',
       forgotPassword: 'Mot de passe oublié ?',
@@ -312,7 +312,7 @@ export const translations = {
   ar: {
     auth: {
       welcomeBack: 'مرحبًا بعودتك',
-      enterTheVault: 'ادخل إلى المخزن',
+      enterTheVault: 'أدخل بياناتك لتسجيل الدخول',
       emailAddress: 'البريد الإلكتروني',
       password: 'كلمة المرور',
       forgotPassword: 'هل نسيت كلمة المرور؟',

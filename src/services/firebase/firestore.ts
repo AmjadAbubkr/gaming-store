@@ -107,18 +107,48 @@ export const getProducts = async (
 
 export const getProductsByCategories = async (
   categories: string[],
-  perCategoryLimit: number = APP_CONFIG.pagination.productsPerPage
+  limitAmount: number = APP_CONFIG.pagination.productsPerPage
 ): Promise<Product[]> => {
-  const results = await Promise.allSettled(
-    categories.map(async (category) => {
-      const { products } = await getProducts(category);
-      return products.slice(0, perCategoryLimit);
-    })
-  );
+  // Firestore IN clause only supports up to 10 items per query
+  if (categories.length === 0 || categories.length > 10) return [];
 
-  return results
-    .flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  const productsRef = collection(db, APP_CONFIG.collections.products);
+  const constraints: any[] = [
+    where('category', 'in', categories),
+    orderBy('createdAt', 'desc'),
+    limit(limitAmount),
+  ];
+
+  try {
+    const q = query(productsRef, ...constraints);
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+    })) as Product[];
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+    
+    if (firebaseError.code !== 'failed-precondition') {
+      throw error;
+    }
+
+    // Fallback if the composite index (category + createdAt) doesn't exist yet
+    const fallbackConstraints: any[] = [
+      where('category', 'in', categories),
+      limit(limitAmount),
+    ];
+
+    const snapshot = await getDocs(query(productsRef, ...fallbackConstraints));
+    
+    return snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
+    })) as Product[];
+  }
 };
 
 /**

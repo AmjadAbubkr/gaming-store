@@ -59,7 +59,7 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     <ScreenWrapper
       scrollable
       withKeyboardAvoid
-      keyboardVerticalOffset={24}
+      keyboardVerticalOffset={80}
       padding={false}
       className="bg-black"
       edges={['top', 'left', 'right', 'bottom']}

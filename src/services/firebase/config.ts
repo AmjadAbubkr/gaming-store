@@ -20,9 +20,11 @@
  */
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+// @ts-ignore — getReactNativePersistence exists at runtime (Metro resolves to RN bundle), but isn't in the default TS typings
+import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Firebase configuration object.
@@ -45,8 +47,32 @@ const firebaseConfig = {
  */
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Export Firebase service instances for use throughout the app
-export const auth = getAuth(app);
+/**
+ * Initialize Firebase Auth with AsyncStorage persistence.
+ * 
+ * WHY THIS IS NEEDED:
+ * By default, Firebase Auth in React Native uses IN-MEMORY persistence,
+ * meaning the user's login session is lost when the app is closed/restarted.
+ * 
+ * By using `getReactNativePersistence(AsyncStorage)`, we tell Firebase to
+ * store the auth token in AsyncStorage (which survives app restarts).
+ * This way, when the user opens the app again, Firebase automatically
+ * restores their login session without requiring them to sign in again.
+ * 
+ * We use a try/catch because if auth is already initialized (e.g., hot reload),
+ * `initializeAuth` will throw — in that case we fall back to `getAuth`.
+ */
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+} catch (error) {
+  // Auth already initialized (e.g., during hot reload), reuse existing instance
+  auth = getAuth(app);
+}
+
+export { auth };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export default app;

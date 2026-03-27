@@ -57,22 +57,24 @@ export const CartScreen = ({ navigation }: any) => {
 
   if (items.length === 0) {
     return (
-      <ScreenWrapper className="justify-center items-center px-6 bg-black">
-        <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-surface-container">
-          <MaterialIcons name="remove-shopping-cart" size={48} color={COLORS.outline} />
+      <ScreenWrapper className="bg-black">
+        <View className="flex-1 justify-center items-center px-6">
+          <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-surface-container">
+            <MaterialIcons name="remove-shopping-cart" size={48} color={COLORS.outline} />
+          </View>
+          <Text className="mb-2 text-center font-headline text-xl font-bold uppercase tracking-wider text-on-surface">
+            {t('cart.emptyLoadout')}
+          </Text>
+          <Text className="mb-8 text-center font-body text-on-surface-variant">
+            {t('cart.emptyBody')}
+          </Text>
+          <Button
+            title={t('cart.returnToHQ')}
+            onPress={() => navigation.navigate('HomeTab')}
+            variant="secondary"
+            className="w-full"
+          />
         </View>
-        <Text className="mb-2 text-center font-headline text-xl font-bold uppercase tracking-wider text-on-surface">
-          {t('cart.emptyLoadout')}
-        </Text>
-        <Text className="mb-8 text-center font-body text-on-surface-variant">
-          {t('cart.emptyBody')}
-        </Text>
-        <Button
-          title={t('cart.returnToHQ')}
-          onPress={() => navigation.navigate('HomeTab')}
-          variant="secondary"
-          className="w-full"
-        />
       </ScreenWrapper>
     );
   }
@@ -140,7 +142,7 @@ export const CartScreen = ({ navigation }: any) => {
         className="absolute left-4 right-4 rounded-[28px] border border-white/10 bg-surface-container px-5 pt-5"
         style={{ bottom: Math.max(insets.bottom, 14) + 84, paddingBottom: 16 }}
       >
-        <View className="mb-4 flex-row items-end justify-between">
+        <View className="mb-4 flex-row items-center justify-between">
           <View>
             <Text className="font-label text-[10px] uppercase tracking-[3px] text-outline">{t('cart.checkout')}</Text>
             <Text className="mt-1 max-w-[220px] font-body text-sm leading-5 text-on-surface-variant">

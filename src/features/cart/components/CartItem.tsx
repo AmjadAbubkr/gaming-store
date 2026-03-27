@@ -63,7 +63,7 @@ export const CartItemCard = ({ item, onIncrease, onDecrease, onRemove }: CartIte
           </View>
         </View>
 
-        <View className="items-end self-stretch justify-end pb-1">
+        <View className="items-end self-stretch justify-center pb-1">
           <Text className="font-label text-[10px] uppercase text-outline">Line Total</Text>
           <Text className="font-headline text-base font-bold text-on-surface">
             {formatPrice(item.price * item.quantity)}
