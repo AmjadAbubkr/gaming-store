@@ -32,26 +32,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Java for Local Android Build
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Check TypeScript types
         run: npx tsc --noEmit
 
-      - name: Build Android APK on EAS
+      - name: Build Android APK (Free Local Build)
         if: github.event_name == 'push'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          eas build --platform android --profile preview --non-interactive --wait --json > eas-build.json
+        run: eas build --platform android --profile preview --local --non-interactive --output app.apk
 
-      - name: Download APK from EAS
+      - name: Build Android AAB (Free Local Build)
         if: github.event_name == 'push'
-        run: |
-          ARTIFACT_URL=$(node -e "const fs=require('fs'); const raw=fs.readFileSync('eas-build.json','utf8').trim(); const parsed=JSON.parse(raw); const build=Array.isArray(parsed)?parsed[0]:parsed; const artifactUrl=build?.artifacts?.buildUrl; if(!artifactUrl){console.error('Missing build artifact URL in eas-build.json'); process.exit(1);} process.stdout.write(artifactUrl);")
-          curl -L "$ARTIFACT_URL" -o app.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build --platform android --profile production --local --non-interactive --output app.aab
 
-      - name: Upload APK Artifact
+      - name: Upload Application Artifacts
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: gaming-store-android-apk
-          path: app.apk
+          name: gaming-store-android-builds
+          path: |
+            app.apk
+            app.aab
           retention-days: 7
