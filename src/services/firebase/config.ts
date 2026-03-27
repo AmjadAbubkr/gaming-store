@@ -21,7 +21,7 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 // @ts-ignore — getReactNativePersistence exists at runtime (Metro resolves to RN bundle), but isn't in the default TS typings
-import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeAuth, getAuth, getReactNativePersistence, Auth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,7 +62,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
  * We use a try/catch because if auth is already initialized (e.g., hot reload),
  * `initializeAuth` will throw — in that case we fall back to `getAuth`.
  */
-let auth;
+let auth: Auth;
 try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
