@@ -62,7 +62,7 @@ export const HomeScreen = () => {
     >
   >();
   const rootNavigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const user = useAuthStore((state) => state.user);
+  const { user, logout } = useAuthStore();
   const { t } = useI18n();
   const { items: cartItems, total: totalPrice } = useCartStore();
   const [heroIndex, setHeroIndex] = useState(() => Math.floor(Math.random() * HERO_BANNERS.length));
@@ -150,6 +150,14 @@ export const HomeScreen = () => {
               </Text>
             </TouchableOpacity>
           ) : null}
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={logout}
+            className="absolute right-4 top-4 z-20 flex-row items-center rounded-2xl border border-white/10 bg-black/55 px-3 py-3"
+          >
+            <MaterialIcons name="logout" size={18} color="#adaaaa" />
+          </TouchableOpacity>
 
           <View className="absolute bottom-24 left-0 right-0 h-20 bg-white/5 opacity-25" />
 

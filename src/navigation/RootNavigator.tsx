@@ -39,13 +39,32 @@ export const RootNavigator = () => {
         // Fetch full profile (with role) from Firestore
         try {
           const profile = await getUserProfile(firebaseUser.uid);
-          setUser(profile);
+          if (profile) {
+            setUser(profile);
+          } else {
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              name: firebaseUser.displayName || 'User',
+              role: 'customer',
+              createdAt: new Date(),
+              phone: '',
+            });
+          }
           if (isGuest) {
             setGuestMode(false);
           }
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
-          setUser(null);
+          // Fallback to avoid logging the user out on network errors
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            name: firebaseUser.displayName || 'User',
+            role: 'customer',
+            createdAt: new Date(),
+            phone: '',
+          });
         }
       } else {
         setUser(null);

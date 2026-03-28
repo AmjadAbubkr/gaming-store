@@ -67,13 +67,6 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
       <StatusBar barStyle="light-content" />
       <View className="flex-1 bg-black px-5 pb-10">
         <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
-          <View className="absolute left-4 top-4 z-20 h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/55">
-            <Image
-              source={require('../../../../assets/icon.png')}
-              style={{ width: 34, height: 34 }}
-              resizeMode="contain"
-            />
-          </View>
 
           <ImageBackground
             source={require('../../../../assets/hero-spidey.png')}
