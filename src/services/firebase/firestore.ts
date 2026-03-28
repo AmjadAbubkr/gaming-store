@@ -35,6 +35,7 @@ import { FirebaseError } from 'firebase/app';
 import { db } from './config';
 import { Product, ProductFormData, Order, OrderItem, OrderStatus } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
+import { withTimeout } from '../../utils/withTimeout';
 
 // ============================================================
 // PRODUCTS
@@ -73,7 +74,7 @@ export const getProducts = async (
 
   try {
     const q = query(productsRef, ...constraints);
-    snapshot = await getDocs(q);
+    snapshot = await withTimeout(getDocs(q), 12000, 'Loading products timed out.');
   } catch (error) {
     const firebaseError = error as FirebaseError;
 
@@ -87,7 +88,7 @@ export const getProducts = async (
       limit(APP_CONFIG.pagination.productsPerPage),
     ];
 
-    snapshot = await getDocs(query(productsRef, ...fallbackConstraints));
+    snapshot = await withTimeout(getDocs(query(productsRef, ...fallbackConstraints)), 12000, 'Loading products timed out.');
   }
 
   // Convert Firestore documents to our Product type
@@ -121,7 +122,7 @@ export const getProductsByCategories = async (
 
   try {
     const q = query(productsRef, ...constraints);
-    const snapshot = await getDocs(q);
+    const snapshot = await withTimeout(getDocs(q), 12000, 'Loading products timed out.');
 
     return snapshot.docs.map((doc) => ({
       ...doc.data(),
@@ -141,7 +142,7 @@ export const getProductsByCategories = async (
       limit(limitAmount),
     ];
 
-    const snapshot = await getDocs(query(productsRef, ...fallbackConstraints));
+    const snapshot = await withTimeout(getDocs(query(productsRef, ...fallbackConstraints)), 12000, 'Loading products timed out.');
     
     return snapshot.docs.map((doc) => ({
       ...doc.data(),
@@ -157,7 +158,7 @@ export const getProductsByCategories = async (
  */
 export const getProductById = async (productId: string): Promise<Product | null> => {
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
-  const docSnap = await getDoc(docRef);
+  const docSnap = await withTimeout(getDoc(docRef), 12000, 'Loading product details timed out.');
 
   if (!docSnap.exists()) return null;
 
@@ -173,10 +174,10 @@ export const getProductById = async (productId: string): Promise<Product | null>
  * Returns the created product with its auto-generated ID.
  */
 export const addProduct = async (data: ProductFormData): Promise<Product> => {
-  const docRef = await addDoc(collection(db, APP_CONFIG.collections.products), {
+  const docRef = await withTimeout(addDoc(collection(db, APP_CONFIG.collections.products), {
     ...data,
     createdAt: serverTimestamp(),  // Server-side timestamp for consistency
-  });
+  }), 15000, 'Saving product timed out.');
 
   return {
     ...data,
@@ -194,7 +195,7 @@ export const updateProduct = async (
   data: Partial<ProductFormData>
 ): Promise<void> => {
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
-  await updateDoc(docRef, data);
+  await withTimeout(updateDoc(docRef, data), 15000, 'Updating product timed out.');
 };
 
 /**
@@ -203,7 +204,7 @@ export const updateProduct = async (
  */
 export const deleteProduct = async (productId: string): Promise<void> => {
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
-  await deleteDoc(docRef);
+  await withTimeout(deleteDoc(docRef), 15000, 'Deleting product timed out.');
 };
 
 // ============================================================
@@ -232,7 +233,7 @@ export const createOrder = async (
     createdAt: serverTimestamp(),
   };
 
-  const docRef = await addDoc(collection(db, APP_CONFIG.collections.orders), orderData);
+  const docRef = await withTimeout(addDoc(collection(db, APP_CONFIG.collections.orders), orderData), 15000, 'Creating order timed out.');
 
   return {
     ...orderData,
@@ -256,7 +257,7 @@ export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
       limit(APP_CONFIG.pagination.ordersPerPage)
     );
 
-    snapshot = await getDocs(q);
+    snapshot = await withTimeout(getDocs(q), 12000, 'Loading orders timed out.');
   } catch (error) {
     const firebaseError = error as FirebaseError;
 
@@ -264,13 +265,13 @@ export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
       throw error;
     }
 
-    snapshot = await getDocs(
+    snapshot = await withTimeout(getDocs(
       query(
         collection(db, APP_CONFIG.collections.orders),
         where('userId', '==', userId),
         limit(APP_CONFIG.pagination.ordersPerPage)
       )
-    );
+    ), 12000, 'Loading orders timed out.');
   }
 
   return snapshot.docs.map((doc) => ({
@@ -291,7 +292,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
     limit(50) // Admin can see more orders at once
   );
 
-  const snapshot = await getDocs(q);
+  const snapshot = await withTimeout(getDocs(q), 12000, 'Loading orders timed out.');
 
   return snapshot.docs.map((doc) => ({
     ...doc.data(),
@@ -309,5 +310,5 @@ export const updateOrderStatus = async (
   status: OrderStatus
 ): Promise<void> => {
   const docRef = doc(db, APP_CONFIG.collections.orders, orderId);
-  await updateDoc(docRef, { status });
+  await withTimeout(updateDoc(docRef, { status }), 15000, 'Updating order status timed out.');
 };

@@ -24,6 +24,7 @@ import { doc, setDoc, getDocFromCache, getDocFromServer, updateDoc } from 'fireb
 import { auth, db } from './config';
 import { User, RegisterData, LoginData } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
+import { TimeoutError, withTimeout } from '../../utils/withTimeout';
 
 const profileCache = new Map<string, User>();
 
@@ -36,7 +37,11 @@ const profileCache = new Map<string, User>();
 export const register = async (data: RegisterData): Promise<User> => {
   try {
     // Step 1: Create auth account
-    const credential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+    const credential = await withTimeout(
+      createUserWithEmailAndPassword(auth, data.email, data.password),
+      15000,
+      'Registration timed out. Check your internet connection and try again.'
+    );
 
     // Step 2: Build the user document
     const userData: User = {
@@ -49,19 +54,23 @@ export const register = async (data: RegisterData): Promise<User> => {
     };
 
     // Step 3: Save to Firestore
-    await setDoc(
-      doc(db, APP_CONFIG.collections.users, credential.user.uid),
-      {
-        ...userData,
-        createdAt: userData.createdAt.toISOString(), // Firestore-friendly date
-      }
+    await withTimeout(
+      setDoc(
+        doc(db, APP_CONFIG.collections.users, credential.user.uid),
+        {
+          ...userData,
+          createdAt: userData.createdAt.toISOString(), // Firestore-friendly date
+        }
+      ),
+      15000,
+      'Saving your account profile timed out. Please try again.'
     );
 
     profileCache.set(userData.id, userData);
     return userData;
   } catch (error: any) {
     // Re-throw with a more user-friendly message
-    throw new Error(getAuthErrorMessage(error.code));
+    throw new Error(getAuthErrorMessage(error));
   }
 };
 
@@ -73,7 +82,11 @@ export const register = async (data: RegisterData): Promise<User> => {
  */
 export const login = async (data: LoginData): Promise<User> => {
   try {
-    const credential = await signInWithEmailAndPassword(auth, data.email, data.password);
+    const credential = await withTimeout(
+      signInWithEmailAndPassword(auth, data.email, data.password),
+      15000,
+      'Sign in timed out. Check your internet connection and try again.'
+    );
     const userProfile = await getUserProfile(credential.user.uid);
 
     if (!userProfile) {
@@ -83,7 +96,7 @@ export const login = async (data: LoginData): Promise<User> => {
     profileCache.set(userProfile.id, userProfile);
     return userProfile;
   } catch (error: any) {
-    throw new Error(getAuthErrorMessage(error.code));
+    throw new Error(getAuthErrorMessage(error));
   }
 };
 
@@ -120,11 +133,19 @@ export const getUserProfile = async (uid: string): Promise<User | null> => {
   try {
     docSnap = await getDocFromCache(docRef);
   } catch {
-    docSnap = await getDocFromServer(docRef);
+    docSnap = await withTimeout(
+      getDocFromServer(docRef),
+      12000,
+      'Profile lookup timed out. Please try again.'
+    );
   }
 
   if (!docSnap.exists()) {
-    docSnap = await getDocFromServer(docRef);
+    docSnap = await withTimeout(
+      getDocFromServer(docRef),
+      12000,
+      'Profile lookup timed out. Please try again.'
+    );
   }
 
   if (!docSnap.exists()) return null;
@@ -153,7 +174,13 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
  * Convert Firebase Auth error codes to human-readable messages.
  * These messages are shown to the user in the UI.
  */
-const getAuthErrorMessage = (code: string): string => {
+const getAuthErrorMessage = (error: any): string => {
+  if (error instanceof TimeoutError) {
+    return error.message;
+  }
+
+  const code = error?.code;
+
   switch (code) {
     case 'auth/email-already-in-use':
       return 'This email is already registered. Try logging in instead.';
