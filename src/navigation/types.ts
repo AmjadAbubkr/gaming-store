@@ -38,6 +38,8 @@ export type CustomerTabParamList = {
 export type CustomerStackParamList = {
   Tabs: NavigatorScreenParams<CustomerTabParamList>;
   ProductDetail: { productId: string };
+  PrivacyPolicy: undefined;
+  DeleteAccount: undefined;
 };
 
 // The Root Navigator which decides which of the above to show

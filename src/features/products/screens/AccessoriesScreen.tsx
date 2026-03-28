@@ -61,7 +61,7 @@ export const AccessoriesScreen = () => {
     <ScreenWrapper padding={false} scrollable={false} className="bg-black">
       <View className="pt-0">
         <ImageBackground
-          source={require('../../../../assets/ET_PS5Accessories_16.webp')}
+          source={require('../../../../assets/accessories-hero.jpg')}
           style={{ width: '100%', height: Math.max(height * 0.24, 190) }}
           resizeMode="cover"
           className="overflow-hidden bg-[#111111]"

@@ -20,7 +20,7 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocFromCache, getDocFromServer, updateDoc } from 'firebase/firestore';
 import { auth, db } from './config';
 import { User, RegisterData, LoginData } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
@@ -95,6 +95,15 @@ export const logout = async (): Promise<void> => {
   profileCache.clear();
 };
 
+export const requestAccountDeletion = async (uid: string): Promise<void> => {
+  await updateDoc(doc(db, APP_CONFIG.collections.users, uid), {
+    deletionRequestStatus: 'requested',
+    deletionRequestedAt: new Date().toISOString(),
+  });
+
+  profileCache.delete(uid);
+};
+
 /**
  * Fetch a user's profile from Firestore.
  * Returns null if the profile doesn't exist.
@@ -106,7 +115,17 @@ export const getUserProfile = async (uid: string): Promise<User | null> => {
   }
 
   const docRef = doc(db, APP_CONFIG.collections.users, uid);
-  const docSnap = await getDoc(docRef);
+  let docSnap;
+
+  try {
+    docSnap = await getDocFromCache(docRef);
+  } catch {
+    docSnap = await getDocFromServer(docRef);
+  }
+
+  if (!docSnap.exists()) {
+    docSnap = await getDocFromServer(docRef);
+  }
 
   if (!docSnap.exists()) return null;
 
@@ -146,6 +165,8 @@ const getAuthErrorMessage = (code: string): string => {
       return 'No account found with this email.';
     case 'auth/wrong-password':
       return 'Incorrect password. Please try again.';
+    case 'auth/invalid-credential':
+      return 'Incorrect email or password. Please try again.';
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait and try again.';
     case 'auth/network-request-failed':

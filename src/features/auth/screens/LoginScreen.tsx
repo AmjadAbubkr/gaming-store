@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -24,6 +24,36 @@ type LoginScreenProps = {
 };
 
 const { height } = Dimensions.get('window');
+
+const LoginArt = memo(() => (
+  <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
+    <ImageBackground
+      source={require('../../../../assets/hero-spidey.png')}
+      style={{ width: '100%', height: height * 0.36 }}
+      resizeMode="contain"
+      imageStyle={{ marginTop: 10 }}
+      className="justify-end items-center bg-[#070707]"
+    >
+      <View className="absolute inset-0 bg-black/20" />
+    </ImageBackground>
+  </View>
+));
+
+LoginArt.displayName = 'LoginArt';
+
+const LoginHeader = memo(({ title, subtitle }: { title: string; subtitle: string }) => (
+  <View className="items-center mb-8">
+    <Text className="text-white text-3xl font-headline font-bold mb-1">
+      {title}
+    </Text>
+    <Text className="text-[#9c9898] text-xs uppercase tracking-[3px]">
+      {subtitle}
+    </Text>
+    <View className="mt-4 h-1 w-14 bg-primary rounded-full" />
+  </View>
+));
+
+LoginHeader.displayName = 'LoginHeader';
 
 export const LoginScreen = ({ navigation }: LoginScreenProps) => {
   const [email, setEmail] = useState('');
@@ -66,29 +96,9 @@ export const LoginScreen = ({ navigation }: LoginScreenProps) => {
     >
       <StatusBar barStyle="light-content" />
       <View className="flex-1 bg-black px-5 pb-10">
-        <View className="mt-3 overflow-hidden rounded-[28px] border border-white/10 bg-surface-container-low">
-
-          <ImageBackground
-            source={require('../../../../assets/hero-spidey.png')}
-            style={{ width: '100%', height: height * 0.36 }}
-            resizeMode="contain"
-            imageStyle={{ marginTop: 10 }}
-            className="justify-end items-center bg-[#070707]"
-          >
-            <View className="absolute inset-0 bg-black/20" />
-          </ImageBackground>
-        </View>
-
+        <LoginArt />
         <View className="mt-[-30] rounded-[28px] border border-white/10 bg-[#111111] px-6 py-7">
-          <View className="items-center mb-8">
-            <Text className="text-white text-3xl font-headline font-bold mb-1">
-              {t('auth.welcomeBack')}
-            </Text>
-            <Text className="text-[#9c9898] text-xs uppercase tracking-[3px]">
-              {t('auth.enterTheVault')}
-            </Text>
-            <View className="mt-4 h-1 w-14 bg-primary rounded-full" />
-          </View>
+          <LoginHeader title={t('auth.welcomeBack')} subtitle={t('auth.enterTheVault')} />
 
           <View className="mb-6">
             <PremiumInput

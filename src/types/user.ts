@@ -18,6 +18,8 @@ export interface User {
   phone: string;           // Phone number (used in WhatsApp orders)
   role: UserRole;          // Either 'admin' or 'customer'
   fcmToken?: string;       // Firebase Cloud Messaging token for push notifications
+  deletionRequestStatus?: 'requested' | 'processed';
+  deletionRequestedAt?: Date | string;
   createdAt: Date;         // Account creation timestamp
 }
 

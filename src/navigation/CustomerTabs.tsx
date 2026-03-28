@@ -15,6 +15,8 @@ import { ConsolesScreen } from '../features/products/screens/ConsolesScreen';
 import { AccessoriesScreen } from '../features/products/screens/AccessoriesScreen';
 import { GamesScreen } from '../features/products/screens/GamesScreen';
 import { CartScreen } from '../features/cart/screens/CartScreen';
+import { PrivacyPolicyScreen } from '../features/account/screens/PrivacyPolicyScreen';
+import { DeleteAccountScreen } from '../features/account/screens/DeleteAccountScreen';
 
 const Tab = createMaterialTopTabNavigator<CustomerTabParamList>();
 const CustomerStack = createNativeStackNavigator<CustomerStackParamList>();
@@ -242,6 +244,32 @@ export const CustomerTabs = () => {
         options={{
           headerShown: true,
           title: 'Item Details',
+          headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
+          headerTintColor: COLORS.onSurface,
+          headerTitleStyle: { fontFamily: FONTS.headline },
+          headerShadowVisible: false,
+          animation: 'fade_from_bottom',
+        }}
+      />
+      <CustomerStack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{
+          headerShown: true,
+          title: 'Privacy Policy',
+          headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
+          headerTintColor: COLORS.onSurface,
+          headerTitleStyle: { fontFamily: FONTS.headline },
+          headerShadowVisible: false,
+          animation: 'fade_from_bottom',
+        }}
+      />
+      <CustomerStack.Screen
+        name="DeleteAccount"
+        component={DeleteAccountScreen}
+        options={{
+          headerShown: true,
+          title: 'Delete Account',
           headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
           headerTintColor: COLORS.onSurface,
           headerTitleStyle: { fontFamily: FONTS.headline },

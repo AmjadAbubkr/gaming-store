@@ -29,10 +29,7 @@ import { useI18n } from '../../../localization/LocalizationProvider';
 
 const { height } = Dimensions.get('window');
 
-const HERO_BANNERS = [
-  require('../../../../assets/home-hero-a.jpg'),
-  require('../../../../assets/home-hero-b.jpg'),
-];
+const HERO_BANNERS = [require('../../../../assets/home-hero.jpg')];
 
 const getNextHeroIndex = (currentIndex: number) => {
   if (HERO_BANNERS.length <= 1) {
@@ -240,7 +237,7 @@ export const HomeScreen = () => {
         )}
       </Animated.View>
 
-      <Animated.View entering={FadeInRight.delay(180).duration(420)} className="px-6 py-8 pb-28">
+      <Animated.View entering={FadeInRight.delay(180).duration(420)} className="px-6 py-8">
         <View className="mb-4 flex-row items-end justify-between">
           <View>
             <Text className="text-2xl font-headline font-bold text-white">{t('home.trendingGames')}</Text>
@@ -279,6 +276,46 @@ export const HomeScreen = () => {
             }
           />
         )}
+      </Animated.View>
+
+      <Animated.View
+        entering={FadeInDown.delay(220).duration(420)}
+        className="mx-4 mt-2 mb-28 rounded-[24px] border border-white/10 bg-surface-container-high/70 px-6 py-5"
+      >
+        <Text className="text-[10px] font-bold uppercase tracking-widest text-[#adaaaa]">
+          Account & Legal
+        </Text>
+        <Text className="mt-2 text-sm leading-6 text-on-surface-variant">
+          Review the privacy policy, open the public compliance page, or submit an account deletion request required for Play Store distribution.
+        </Text>
+
+        <View className="mt-4 flex-row">
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+            className="mr-3 flex-1 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-4"
+          >
+            <Text className="font-headline text-sm font-bold uppercase tracking-[2px] text-primary">
+              Privacy Policy
+            </Text>
+            <Text className="mt-2 text-xs leading-5 text-on-surface-variant">
+              View the in-app summary and the public URL for Google Play.
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('DeleteAccount')}
+            className="flex-1 rounded-2xl border border-error/25 bg-error/10 px-4 py-4"
+          >
+            <Text className="font-headline text-sm font-bold uppercase tracking-[2px] text-error">
+              Delete Account
+            </Text>
+            <Text className="mt-2 text-xs leading-5 text-on-surface-variant">
+              Submit an in-app deletion request and review the external deletion steps.
+            </Text>
+          </TouchableOpacity>
+        </View>
       </Animated.View>
     </ScreenWrapper>
   );

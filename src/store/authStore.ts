@@ -22,6 +22,7 @@ interface AuthState {
   loginAsAdmin: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  requestAccountDeletion: () => Promise<void>;
   setGuestMode: (isGuest: boolean) => void;
   setUser: (user: User | null) => void;
   clearError: () => void;
@@ -80,6 +81,26 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: null, isGuest: false, isLoading: false });
     } catch (error: any) {
       set({ error: error.message, isLoading: false });
+    }
+  },
+
+  requestAccountDeletion: async () => {
+    const currentUser = useAuthStore.getState().user;
+
+    if (!currentUser) {
+      set({ error: 'No active account found.', isLoading: false });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+
+    try {
+      await authService.requestAccountDeletion(currentUser.id);
+      await authService.logout();
+      set({ user: null, isGuest: false, isLoading: false });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to request account deletion.', isLoading: false });
+      throw error;
     }
   },
 

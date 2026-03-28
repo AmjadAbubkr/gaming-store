@@ -14,6 +14,10 @@ export const APP_CONFIG = {
   // Format: country code + number, no spaces or dashes
   // Chad country code is +235
   whatsappNumber: (process.env.EXPO_PUBLIC_WHATSAPP_NUMBER || '+23565032926').replace(/[^\d]/g, ''),
+  support: {
+    privacyPolicyUrl: 'https://amjadabubkr.github.io/gaming-store/privacy-policy.html',
+    accountDeletionUrl: 'https://amjadabubkr.github.io/gaming-store/account-deletion.html',
+  },
 
   // Currency settings for Chad (Central African CFA franc)
   currency: 'FCFA',
