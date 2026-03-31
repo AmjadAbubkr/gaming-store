@@ -1,4 +1,5 @@
-name: Build Android APK
+name: Build Android Release
+
 on:
   push:
     branches:
@@ -10,6 +11,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,11 +22,11 @@ jobs:
           node-version: 20.x
           cache: npm
 
-      - name: Setup Expo
+      - name: Setup Expo and EAS
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
-          eas-version: latest
+          eas-version: 18.4.0
           packager: npm
           expo-cache: false
           token: ${{ secrets.EXPO_TOKEN }}
@@ -32,33 +34,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup Java for Local Android Build
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Check TypeScript types
         run: npx tsc --noEmit
 
-      - name: Build Android APK (Free Local Build)
+      - name: Build Android AAB (Remote EAS Build)
         if: github.event_name == 'push'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform android --profile preview --local --non-interactive --output app.apk
+        run: |
+          eas build --platform android --profile production --non-interactive --wait --json > build.json
 
-      - name: Build Android AAB (Free Local Build)
+      - name: Resolve AAB artifact URL
         if: github.event_name == 'push'
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: eas build --platform android --profile production --local --non-interactive --output app.aab
+        run: |
+          node -e "const fs=require('fs'); const raw=fs.readFileSync('build.json','utf8'); const data=JSON.parse(raw); const url=data?.artifacts?.buildUrl || data?.artifacts?.applicationArchiveUrl || data?.applicationArchiveUrl; if(!url){console.error(raw); process.exit(1);} fs.writeFileSync('build-url.txt', url);"
 
-      - name: Upload Application Artifacts
+      - name: Download AAB artifact
+        if: github.event_name == 'push'
+        run: |
+          curl -L "$(cat build-url.txt)" -o app.aab
+
+      - name: Upload Application Artifact
         if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: gaming-store-android-builds
-          path: |
-            app.apk
-            app.aab
+          name: gaming-store-android-aab
+          path: app.aab
           retention-days: 7
