@@ -1,4 +1,4 @@
-name: Build Android Release
+name: Build Release
 
 on:
   push:
@@ -9,7 +9,10 @@ on:
       - main
 
 jobs:
-  build:
+  # ─────────────────────────────────────────────────
+  # Android Build Job (existing — builds AAB artifact)
+  # ─────────────────────────────────────────────────
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -60,4 +63,68 @@ jobs:
         with:
           name: gaming-store-android-aab
           path: app.aab
+          retention-days: 7
+
+  # ─────────────────────────────────────────────────
+  # iOS Build Job (new — builds IPA artifact)
+  # Requires EXPO_TOKEN secret with access to an
+  # Apple Developer account linked in EAS.
+  # ─────────────────────────────────────────────────
+  build-ios:
+    runs-on: ubuntu-latest
+    # Skip iOS builds until Apple Developer Account is configured.
+    # Remove this 'if' condition once your account is set up.
+    if: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: 18.4.0
+          packager: npm
+          expo-cache: false
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check TypeScript types
+        run: npx tsc --noEmit
+
+      # EAS builds iOS remotely on Apple's infrastructure (via Expo servers).
+      # This requires Apple Developer credentials to be configured in EAS.
+      # Run 'eas credentials' locally first to set up iOS signing.
+      - name: Build iOS IPA (Remote EAS Build)
+        if: github.event_name == 'push'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build --platform ios --profile production --non-interactive --wait --json > build-ios.json
+
+      - name: Resolve IPA artifact URL
+        if: github.event_name == 'push'
+        run: |
+          node -e "const fs=require('fs'); const raw=fs.readFileSync('build-ios.json','utf8'); const data=JSON.parse(raw); const url=data?.artifacts?.buildUrl || data?.artifacts?.applicationArchiveUrl || data?.applicationArchiveUrl; if(!url){console.error(raw); process.exit(1);} fs.writeFileSync('build-ios-url.txt', url);"
+
+      - name: Download IPA artifact
+        if: github.event_name == 'push'
+        run: |
+          curl -L "$(cat build-ios-url.txt)" -o app.ipa
+
+      - name: Upload iOS Artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaming-store-ios-ipa
+          path: app.ipa
           retention-days: 7

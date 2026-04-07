@@ -13,7 +13,15 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.cybernexus.gamingstore",
+      "buildNumber": "1",
+      "icon": "./assets/ios-icon.png",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Game Technologie needs camera access to take product photos for admin listings.",
+        "NSPhotoLibraryUsageDescription": "Game Technologie needs photo library access to select product images for admin listings.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.cybernexus.gamingstore",
@@ -33,6 +41,9 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
           }
         }
       ]
