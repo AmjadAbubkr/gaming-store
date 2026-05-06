@@ -26,6 +26,7 @@ import { formatPrice } from '../../../utils/formatting';
 import { CONSOLE_CATEGORIES, GAME_CATEGORIES } from '../../../utils/productCategories';
 import { ImageOptimized } from '../../../components/ui/ImageOptimized';
 import { useI18n } from '../../../localization/LocalizationProvider';
+import { FLOATING_CUSTOMER_TAB_BAR_CLEARANCE } from '../../../constants/layout';
 
 const { height } = Dimensions.get('window');
 
@@ -112,7 +113,12 @@ export const HomeScreen = () => {
   const currentHero = HERO_BANNERS[heroIndex];
 
   return (
-    <ScreenWrapper padding={false} scrollable className="flex-1 bg-black">
+    <ScreenWrapper
+      padding={false}
+      scrollable
+      bottomPadding={FLOATING_CUSTOMER_TAB_BAR_CLEARANCE}
+      className="flex-1 bg-black"
+    >
       <Animated.View key={`hero-${heroIndex}`} entering={FadeInDown.duration(260)} className="px-4 pt-4">
         <ImageBackground
           source={currentHero}

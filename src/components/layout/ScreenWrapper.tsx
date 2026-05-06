@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ScrollView } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { SafeAreaView, Edge } from 'react-native-safe-area-context';
+import { SafeAreaView, Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../../localization/LocalizationProvider';
 
 interface ScreenWrapperProps {
@@ -12,6 +12,7 @@ interface ScreenWrapperProps {
   className?: string;
   keyboardVerticalOffset?: number;
   edges?: Edge[];
+  bottomPadding?: number;
 }
 
 /**
@@ -33,13 +34,21 @@ export const ScreenWrapper = ({
   className = '',
   keyboardVerticalOffset = 0,
   edges = ['top', 'left', 'right'],
+  bottomPadding = 0,
 }: ScreenWrapperProps) => {
   const { isRTL } = useI18n();
+  const insets = useSafeAreaInsets();
+  const contentBottomPadding = bottomPadding + (edges.includes('bottom') ? insets.bottom : 0);
   
   const content = scrollable ? (
     withKeyboardAvoid ? (
       <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1, padding: padding ? 16 : 0 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: padding ? 16 : 0,
+          paddingHorizontal: padding ? 16 : 0,
+          paddingBottom: (padding ? 16 : 0) + contentBottomPadding,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr' } as any}
@@ -51,7 +60,12 @@ export const ScreenWrapper = ({
       </KeyboardAwareScrollView>
     ) : (
       <ScrollView 
-        contentContainerStyle={{ flexGrow: 1, padding: padding ? 16 : 0 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingTop: padding ? 16 : 0,
+          paddingHorizontal: padding ? 16 : 0,
+          paddingBottom: (padding ? 16 : 0) + contentBottomPadding,
+        }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr' } as any}
@@ -60,7 +74,13 @@ export const ScreenWrapper = ({
       </ScrollView>
     )
   ) : (
-    <View className={`flex-1 ${padding ? 'p-4' : ''}`} style={{ direction: isRTL ? 'rtl' : 'ltr' } as any}>
+    <View
+      className={`flex-1 ${padding ? 'p-4' : ''}`}
+      style={{
+        direction: isRTL ? 'rtl' : 'ltr',
+        paddingBottom: (padding ? 16 : 0) + contentBottomPadding,
+      } as any}
+    >
       {children}
     </View>
   );

@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CONSOLE_CATEGORIES } from '../../../utils/productCategories';
 import { ImageOptimized } from '../../../components/ui/ImageOptimized';
 import { useI18n } from '../../../localization/LocalizationProvider';
+import { FLOATING_CUSTOMER_TAB_BAR_CLEARANCE } from '../../../constants/layout';
 
 const { height } = Dimensions.get('window');
 
@@ -58,7 +59,12 @@ export const ConsolesScreen = () => {
   }, []);
 
   return (
-    <ScreenWrapper padding={false} scrollable={false} className="bg-black">
+    <ScreenWrapper
+      padding={false}
+      scrollable={false}
+      bottomPadding={FLOATING_CUSTOMER_TAB_BAR_CLEARANCE}
+      className="bg-black"
+    >
       <View className="pt-0">
         <ImageBackground
           source={require('../../../../assets/consoles-hero.png')}

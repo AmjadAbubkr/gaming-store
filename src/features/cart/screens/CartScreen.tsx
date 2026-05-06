@@ -13,6 +13,7 @@ import { CartItemCard } from '../components/CartItem';
 import { formatPrice } from '../../../utils/formatting';
 import { COLORS } from '../../../constants/theme';
 import { useI18n } from '../../../localization/LocalizationProvider';
+import { FLOATING_CUSTOMER_TAB_BAR_CLEARANCE } from '../../../constants/layout';
 
 export const CartScreen = ({ navigation }: any) => {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCartStore();
@@ -57,7 +58,7 @@ export const CartScreen = ({ navigation }: any) => {
 
   if (items.length === 0) {
     return (
-      <ScreenWrapper className="bg-black">
+      <ScreenWrapper bottomPadding={FLOATING_CUSTOMER_TAB_BAR_CLEARANCE} className="bg-black">
         <View className="flex-1 justify-center items-center px-6">
           <View className="mb-6 h-24 w-24 items-center justify-center rounded-full bg-surface-container">
             <MaterialIcons name="remove-shopping-cart" size={48} color={COLORS.outline} />
