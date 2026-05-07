@@ -20,9 +20,7 @@
       }
     },
     "production": {
-      "ios": {
-        "autoIncrement": true
-      }
+      "ios": {}
     }
   },
   "submit": {
