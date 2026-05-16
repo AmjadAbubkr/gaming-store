@@ -3,7 +3,7 @@
     "name": "Game Technologie",
     "slug": "gaming-store",
     "owner": "amjadabubkr",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -23,6 +23,7 @@
       }
     },
     "android": {
+      "versionCode": 2,
       "package": "com.cybernexus.gamingstore",
       "blockedPermissions": [
         "android.permission.CAMERA"
