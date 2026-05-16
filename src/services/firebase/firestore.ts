@@ -28,11 +28,10 @@ import {
   limit,
   startAfter,
   DocumentSnapshot,
-  Timestamp,
   serverTimestamp,
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
-import { db } from './config';
+import { getFirebaseServices } from './config';
 import { Product, ProductFormData, Order, OrderItem, OrderStatus } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
 import { withTimeout } from '../../utils/withTimeout';
@@ -52,6 +51,7 @@ export const getProducts = async (
   category?: string,
   lastDoc?: DocumentSnapshot
 ): Promise<{ products: Product[]; lastDocument: DocumentSnapshot | null }> => {
+  const { db } = getFirebaseServices();
   const productsRef = collection(db, APP_CONFIG.collections.products);
 
   // Build the query dynamically based on filters
@@ -113,6 +113,7 @@ export const getProductsByCategories = async (
   // Firestore IN clause only supports up to 10 items per query
   if (categories.length === 0 || categories.length > 10) return [];
 
+  const { db } = getFirebaseServices();
   const productsRef = collection(db, APP_CONFIG.collections.products);
   const constraints: any[] = [
     where('category', 'in', categories),
@@ -157,6 +158,7 @@ export const getProductsByCategories = async (
  * Used in the Product Detail screen.
  */
 export const getProductById = async (productId: string): Promise<Product | null> => {
+  const { db } = getFirebaseServices();
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
   const docSnap = await withTimeout(getDoc(docRef), 12000, 'Loading product details timed out.');
 
@@ -174,6 +176,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
  * Returns the created product with its auto-generated ID.
  */
 export const addProduct = async (data: ProductFormData): Promise<Product> => {
+  const { db } = getFirebaseServices();
   const docRef = await withTimeout(addDoc(collection(db, APP_CONFIG.collections.products), {
     ...data,
     createdAt: serverTimestamp(),  // Server-side timestamp for consistency
@@ -194,6 +197,7 @@ export const updateProduct = async (
   productId: string,
   data: Partial<ProductFormData>
 ): Promise<void> => {
+  const { db } = getFirebaseServices();
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
   await withTimeout(updateDoc(docRef, data), 15000, 'Updating product timed out.');
 };
@@ -203,6 +207,7 @@ export const updateProduct = async (
  * WARNING: This permanently removes the product from Firestore.
  */
 export const deleteProduct = async (productId: string): Promise<void> => {
+  const { db } = getFirebaseServices();
   const docRef = doc(db, APP_CONFIG.collections.products, productId);
   await withTimeout(deleteDoc(docRef), 15000, 'Deleting product timed out.');
 };
@@ -223,6 +228,7 @@ export const createOrder = async (
   userName?: string,
   userPhone?: string
 ): Promise<Order> => {
+  const { db } = getFirebaseServices();
   const orderData = {
     userId,
     userName: userName || '',
@@ -247,6 +253,7 @@ export const createOrder = async (
  * Shows order history sorted by newest first.
  */
 export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
+  const { db } = getFirebaseServices();
   let snapshot;
 
   try {
@@ -286,6 +293,7 @@ export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
  * Admin can see all orders from all customers.
  */
 export const getAllOrders = async (): Promise<Order[]> => {
+  const { db } = getFirebaseServices();
   const q = query(
     collection(db, APP_CONFIG.collections.orders),
     orderBy('createdAt', 'desc'),
@@ -309,6 +317,7 @@ export const updateOrderStatus = async (
   orderId: string,
   status: OrderStatus
 ): Promise<void> => {
+  const { db } = getFirebaseServices();
   const docRef = doc(db, APP_CONFIG.collections.orders, orderId);
   await withTimeout(updateDoc(docRef, { status }), 15000, 'Updating order status timed out.');
 };

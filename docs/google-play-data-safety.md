@@ -22,6 +22,9 @@ Based on the current `gaming-store` codebase, these are the declarations you sho
 - No direct third-party advertising or analytics sharing was found in the current app code.
 - WhatsApp checkout is user-initiated, so order handoff can involve WhatsApp when the user explicitly taps the checkout action.
 
+Suggested Play Console wording:
+`User-provided account and order details are collected to create accounts, manage sign-in, process orders, and support customer service. Data is stored with Firebase services over encrypted connections. The app does not use advertising or analytics SDKs. Order details may be shared with WhatsApp only when the user explicitly chooses to continue checkout through WhatsApp.`
+
 ## Security
 
 - Firebase Authentication and Firestore are used for account and order storage.
@@ -38,3 +41,4 @@ Based on the current `gaming-store` codebase, these are the declarations you sho
 - If you later enable push notifications, analytics, ads, crash reporting, location, or contacts access, update the declarations.
 - If you add direct file upload for customer content, update the collected data categories.
 - If you change the deletion process from request-based to immediate deletion, update the account deletion description.
+- The app is currently gallery-only for admin image selection and should not request camera access in the Android release manifest.

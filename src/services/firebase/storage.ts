@@ -7,7 +7,7 @@
  */
 
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from './config';
+import { getFirebaseServices } from './config';
 
 /**
  * Upload a product image to Firebase Storage.
@@ -26,6 +26,7 @@ export const uploadProductImage = async (
   productId: string
 ): Promise<string> => {
   try {
+    const { storage } = getFirebaseServices();
     // Create a unique filename using timestamp
     const filename = `${Date.now()}.jpg`;
     const storageRef = ref(storage, `products/${productId}/${filename}`);
@@ -55,6 +56,7 @@ export const uploadProductImage = async (
  */
 export const deleteProductImage = async (imageUrl: string): Promise<void> => {
   try {
+    const { storage } = getFirebaseServices();
     // Create a reference from the download URL
     const imageRef = ref(storage, imageUrl);
     await deleteObject(imageRef);

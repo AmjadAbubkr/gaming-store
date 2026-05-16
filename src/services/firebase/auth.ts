@@ -21,7 +21,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, setDoc, getDocFromCache, getDocFromServer, updateDoc } from 'firebase/firestore';
-import { auth, db } from './config';
+import { getFirebaseServices, getFirebaseInitializationError, isFirebaseConfigured } from './config';
 import { User, RegisterData, LoginData } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
 import { TimeoutError, withTimeout } from '../../utils/withTimeout';
@@ -36,6 +36,8 @@ const profileCache = new Map<string, User>();
  */
 export const register = async (data: RegisterData): Promise<User> => {
   try {
+    const { auth, db } = getFirebaseServices();
+
     // Step 1: Create auth account
     const credential = await withTimeout(
       createUserWithEmailAndPassword(auth, data.email, data.password),
@@ -82,6 +84,7 @@ export const register = async (data: RegisterData): Promise<User> => {
  */
 export const login = async (data: LoginData): Promise<User> => {
   try {
+    const { auth } = getFirebaseServices();
     const credential = await withTimeout(
       signInWithEmailAndPassword(auth, data.email, data.password),
       15000,
@@ -104,11 +107,13 @@ export const login = async (data: LoginData): Promise<User> => {
  * Sign out the current user.
  */
 export const logout = async (): Promise<void> => {
+  const { auth } = getFirebaseServices();
   await firebaseSignOut(auth);
   profileCache.clear();
 };
 
 export const requestAccountDeletion = async (uid: string): Promise<void> => {
+  const { db } = getFirebaseServices();
   await updateDoc(doc(db, APP_CONFIG.collections.users, uid), {
     deletionRequestStatus: 'requested',
     deletionRequestedAt: new Date().toISOString(),
@@ -122,6 +127,7 @@ export const requestAccountDeletion = async (uid: string): Promise<void> => {
  * Returns null if the profile doesn't exist.
  */
 export const getUserProfile = async (uid: string): Promise<User | null> => {
+  const { db } = getFirebaseServices();
   const cachedProfile = profileCache.get(uid);
   if (cachedProfile) {
     return cachedProfile;
@@ -167,6 +173,13 @@ export const getUserProfile = async (uid: string): Promise<User | null> => {
  * Returns an unsubscribe function.
  */
 export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
+  if (!isFirebaseConfigured()) {
+    console.warn('Skipping Firebase auth bootstrap:', getFirebaseInitializationError());
+    callback(null);
+    return () => undefined;
+  }
+
+  const { auth } = getFirebaseServices();
   return onAuthStateChanged(auth, callback);
 };
 

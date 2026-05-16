@@ -18,13 +18,15 @@
       "buildNumber": "1",
       "icon": "./assets/ios-icon.png",
       "infoPlist": {
-        "NSCameraUsageDescription": "Game Technologie needs camera access to take product photos for admin listings.",
         "NSPhotoLibraryUsageDescription": "Game Technologie needs photo library access to select product images for admin listings.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.cybernexus.gamingstore",
+      "blockedPermissions": [
+        "android.permission.CAMERA"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

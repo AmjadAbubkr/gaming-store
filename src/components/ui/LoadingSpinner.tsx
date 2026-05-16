@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,6 +15,8 @@ interface LoadingSpinnerProps {
   size?: number;
   color?: string;
   fullScreen?: boolean;
+  label?: string;
+  detail?: string;
 }
 
 /**
@@ -25,6 +27,8 @@ export const LoadingSpinner = ({
   size = 40,
   color = COLORS.primary,
   fullScreen = false,
+  label,
+  detail,
 }: LoadingSpinnerProps) => {
   const rotation = useSharedValue(0);
   const pulse = useSharedValue(0.5);
@@ -92,6 +96,12 @@ export const LoadingSpinner = ({
     return (
       <View className="flex-1 bg-background items-center justify-center">
         {spinner}
+        {label ? (
+          <Text className="mt-4 px-6 text-center text-sm text-on-surface">{label}</Text>
+        ) : null}
+        {detail ? (
+          <Text className="mt-2 px-6 text-center text-xs text-on-surface-variant">{detail}</Text>
+        ) : null}
       </View>
     );
   }

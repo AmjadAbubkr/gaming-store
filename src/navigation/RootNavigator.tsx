@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 // Stores and Services
 import { useAuthStore } from '../store/authStore';
 import { onAuthChange, getUserProfile } from '../services/firebase/auth';
+import { getFirebaseInitializationError, isFirebaseConfigured } from '../services/firebase/config';
 
 // Navigators
 import { CustomerTabs } from './CustomerTabs';
@@ -31,8 +32,14 @@ const AuthNavigator = () => (
 
 export const RootNavigator = () => {
   const { user, isGuest, isBootstrapping, setUser, setGuestMode } = useAuthStore();
+  const firebaseReady = isFirebaseConfigured();
+  const firebaseError = getFirebaseInitializationError();
 
   useEffect(() => {
+    if (!firebaseReady) {
+      return;
+    }
+
     // Listen for Firebase Auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
       if (firebaseUser) {
@@ -72,7 +79,20 @@ export const RootNavigator = () => {
     });
 
     return unsubscribe;
-  }, [isGuest, setGuestMode, setUser]);
+  }, [firebaseReady, isGuest, setGuestMode, setUser]);
+
+  if (!firebaseReady) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <LoadingSpinner
+          fullScreen
+          label="App setup issue detected. Add the Firebase EXPO_PUBLIC_* values before creating a release build."
+          detail={firebaseError ?? undefined}
+        />
+      </SafeAreaProvider>
+    );
+  }
 
   if (isBootstrapping) {
     return <LoadingSpinner fullScreen />;
