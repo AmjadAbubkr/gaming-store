@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "versionCode": 3,
+      "versionCode": 4,
       "package": "com.cybernexus.gamingstore",
       "blockedPermissions": [
         "android.permission.CAMERA"
