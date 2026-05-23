@@ -70,9 +70,9 @@ export const AdminDashboard = ({ navigation }: AdminDashboardProps) => {
 
       {error ? (
         <View className="mb-5 rounded-2xl border border-error/30 bg-error/10 px-4 py-4">
-          <Text className="text-sm font-bold text-error">Orders could not be loaded right now.</Text>
+          <Text className="text-sm font-bold text-error">{t('admin.ordersUnavailable')}</Text>
           <Text className="mt-1 text-sm leading-5 text-on-surface-variant">
-            The dashboard is still available. Try refresh after confirming your account has admin access in Firestore.
+            {t('admin.ordersUnavailableBody')}
           </Text>
         </View>
       ) : null}

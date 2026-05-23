@@ -11,7 +11,6 @@ import { Product } from '../types';
 export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
-  AdminLogin: undefined;
 };
 
 // The screens available to Admins

@@ -2,7 +2,6 @@ import React from 'react';
 import { View, ScrollView } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView, Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useI18n } from '../../localization/LocalizationProvider';
 
 interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -36,7 +35,6 @@ export const ScreenWrapper = ({
   edges = ['top', 'left', 'right'],
   bottomPadding = 0,
 }: ScreenWrapperProps) => {
-  const { isRTL } = useI18n();
   const insets = useSafeAreaInsets();
   const contentBottomPadding = bottomPadding + (edges.includes('bottom') ? insets.bottom : 0);
   
@@ -51,7 +49,7 @@ export const ScreenWrapper = ({
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr' } as any}
+        style={{ flex: 1 }}
         enableOnAndroid={true}
         extraScrollHeight={keyboardVerticalOffset}
         keyboardOpeningTime={0}
@@ -59,7 +57,7 @@ export const ScreenWrapper = ({
         {children}
       </KeyboardAwareScrollView>
     ) : (
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
           paddingTop: padding ? 16 : 0,
@@ -68,7 +66,7 @@ export const ScreenWrapper = ({
         }}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        style={{ flex: 1, direction: isRTL ? 'rtl' : 'ltr' } as any}
+        style={{ flex: 1 }}
       >
         {children}
       </ScrollView>
@@ -77,16 +75,15 @@ export const ScreenWrapper = ({
     <View
       className={`flex-1 ${padding ? 'p-4' : ''}`}
       style={{
-        direction: isRTL ? 'rtl' : 'ltr',
         paddingBottom: (padding ? 16 : 0) + contentBottomPadding,
-      } as any}
+      }}
     >
       {children}
     </View>
   );
 
   return (
-    <SafeAreaView className={`flex-1 bg-background ${className}`} edges={edges} style={{ direction: isRTL ? 'rtl' : 'ltr' } as any}>
+    <SafeAreaView className={`flex-1 bg-background ${className}`} edges={edges}>
       {content}
     </SafeAreaView>
   );

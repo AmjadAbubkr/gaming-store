@@ -13,7 +13,6 @@ import { CATEGORIES } from '../../../constants/categories';
 import { Product, ProductCondition, ProductCategory } from '../../../types';
 import { useProductsStore } from '../../../store/productsStore';
 import * as firestoreService from '../../../services/firebase/firestore';
-import { isConsoleCategory, isGameCategory } from '../../../utils/productCategories';
 import { useI18n } from '../../../localization/LocalizationProvider';
 
 type Props = NativeStackScreenProps<AdminStackParamList, 'AddEditProduct'>;
@@ -51,7 +50,7 @@ export const AddEditProductScreen = ({ route, navigation }: Props) => {
       setDescription(product.description);
       setPrice(product.price.toString());
       setStock(product.stock.toString());
-      setCategory(isConsoleCategory(product.category) ? 'consoles' : isGameCategory(product.category) ? 'games' : 'games');
+      setCategory(product.category);
       setCondition(product.condition);
       setImages(product.images);
       setCreatedAt(product.createdAt);

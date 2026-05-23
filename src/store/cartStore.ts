@@ -10,6 +10,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OrderItem, Product } from '../types';
+import { getProductImageUri, isValidProductImageUri } from '../utils/productImages';
 
 interface CartState {
   items: OrderItem[];
@@ -51,7 +52,7 @@ export const useCartStore = create<CartState>()(
               productName: product.name,
               price: product.price,
               quantity,
-              image: product.images[0], // Store first image for display
+              image: isValidProductImageUri(product.images[0]) ? getProductImageUri(product.images[0]) : undefined,
             },
           ];
         }

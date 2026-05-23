@@ -27,7 +27,10 @@ import {
   orderBy,
   limit,
   startAfter,
+  QueryConstraint,
   DocumentSnapshot,
+  QueryDocumentSnapshot,
+  DocumentData,
   serverTimestamp,
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
@@ -35,6 +38,92 @@ import { getFirebaseServices } from './config';
 import { Product, ProductFormData, Order, OrderItem, OrderStatus } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
 import { withTimeout } from '../../utils/withTimeout';
+import { normalizeProductImages } from '../../utils/productImages';
+
+const normalizeProductCategory = (category: unknown): Product['category'] => {
+  switch (category) {
+    case 'playstation':
+    case 'xbox':
+    case 'consoles':
+      return 'consoles';
+    case 'cds':
+    case 'games':
+      return 'games';
+    case 'accessories':
+      return 'accessories';
+    default:
+      return 'games';
+  }
+};
+
+const toDate = (value: unknown) => {
+  if (value instanceof Date) {
+    return value;
+  }
+
+  if (typeof value === 'object' && value !== null && 'toDate' in value && typeof value.toDate === 'function') {
+    return value.toDate();
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsedDate = new Date(value);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+  }
+
+  return new Date();
+};
+
+const mapProduct = (snapshot: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>): Product => {
+  const data = snapshot.data() ?? {};
+
+  return {
+    id: snapshot.id,
+    name: typeof data.name === 'string' ? data.name : '',
+    description: typeof data.description === 'string' ? data.description : '',
+    price: typeof data.price === 'number' ? data.price : 0,
+    stock: typeof data.stock === 'number' ? data.stock : 0,
+    condition: data.condition === 'used' ? 'used' : 'new',
+    category: normalizeProductCategory(data.category),
+    images: normalizeProductImages(data.images),
+    createdAt: toDate(data.createdAt),
+  };
+};
+
+const mapOrder = (snapshot: QueryDocumentSnapshot<DocumentData>): Order => {
+  const data = snapshot.data();
+
+  return {
+    id: snapshot.id,
+    userId: typeof data.userId === 'string' ? data.userId : '',
+    userName: typeof data.userName === 'string' ? data.userName : '',
+    userPhone: typeof data.userPhone === 'string' ? data.userPhone : '',
+    items: Array.isArray(data.items) ? (data.items as OrderItem[]) : [],
+    total: typeof data.total === 'number' ? data.total : 0,
+    status: data.status === 'sent_whatsapp' ? 'sent_whatsapp' : 'pending',
+    createdAt: toDate(data.createdAt),
+  };
+};
+
+const getDocsWithIndexFallback = async (
+  collectionRef: ReturnType<typeof collection>,
+  constraints: QueryConstraint[],
+  timeoutMessage: string,
+  fallbackConstraints?: QueryConstraint[]
+) => {
+  try {
+    return await withTimeout(getDocs(query(collectionRef, ...constraints)), 12000, timeoutMessage);
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+
+    if (firebaseError.code !== 'failed-precondition' || !fallbackConstraints) {
+      throw error;
+    }
+
+    return withTimeout(getDocs(query(collectionRef, ...fallbackConstraints)), 12000, timeoutMessage);
+  }
+};
 
 // ============================================================
 // PRODUCTS
@@ -54,49 +143,30 @@ export const getProducts = async (
   const { db } = getFirebaseServices();
   const productsRef = collection(db, APP_CONFIG.collections.products);
 
-  // Build the query dynamically based on filters
-  const constraints: any[] = [
-    orderBy('createdAt', 'desc'),                           // Newest first
-    limit(APP_CONFIG.pagination.productsPerPage),            // Limit for bandwidth
+  const constraints: QueryConstraint[] = [
+    orderBy('createdAt', 'desc'),
+    limit(APP_CONFIG.pagination.productsPerPage),
   ];
 
-  // Add category filter if specified
   if (category && category !== 'all') {
     constraints.unshift(where('category', '==', category));
   }
 
-  // Add pagination cursor if loading more
   if (lastDoc) {
     constraints.push(startAfter(lastDoc));
   }
 
-  let snapshot;
-
-  try {
-    const q = query(productsRef, ...constraints);
-    snapshot = await withTimeout(getDocs(q), 12000, 'Loading products timed out.');
-  } catch (error) {
-    const firebaseError = error as FirebaseError;
-
-    if (firebaseError.code !== 'failed-precondition' || !category || category === 'all') {
-      throw error;
-    }
-
-    // Fallback for projects missing the composite index for category + createdAt.
-    const fallbackConstraints: any[] = [
-      where('category', '==', category),
-      limit(APP_CONFIG.pagination.productsPerPage),
-    ];
-
-    snapshot = await withTimeout(getDocs(query(productsRef, ...fallbackConstraints)), 12000, 'Loading products timed out.');
-  }
-
-  // Convert Firestore documents to our Product type
-  const products: Product[] = snapshot.docs.map((doc) => ({
-    ...doc.data(),
-    id: doc.id,
-    createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-  })) as Product[];
+  const fallbackConstraints =
+    category && category !== 'all'
+      ? [where('category', '==', category), limit(APP_CONFIG.pagination.productsPerPage)]
+      : undefined;
+  const snapshot = await getDocsWithIndexFallback(
+    productsRef,
+    constraints,
+    'Loading products timed out.',
+    fallbackConstraints
+  );
+  const products = snapshot.docs.map(mapProduct);
 
   // Return the last document for pagination
   const lastDocument = snapshot.docs.length > 0
@@ -110,47 +180,24 @@ export const getProductsByCategories = async (
   categories: string[],
   limitAmount: number = APP_CONFIG.pagination.productsPerPage
 ): Promise<Product[]> => {
-  // Firestore IN clause only supports up to 10 items per query
   if (categories.length === 0 || categories.length > 10) return [];
 
   const { db } = getFirebaseServices();
   const productsRef = collection(db, APP_CONFIG.collections.products);
-  const constraints: any[] = [
+  const constraints: QueryConstraint[] = [
     where('category', 'in', categories),
     orderBy('createdAt', 'desc'),
     limit(limitAmount),
   ];
+  const fallbackConstraints: QueryConstraint[] = [where('category', 'in', categories), limit(limitAmount)];
+  const snapshot = await getDocsWithIndexFallback(
+    productsRef,
+    constraints,
+    'Loading products timed out.',
+    fallbackConstraints
+  );
 
-  try {
-    const q = query(productsRef, ...constraints);
-    const snapshot = await withTimeout(getDocs(q), 12000, 'Loading products timed out.');
-
-    return snapshot.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
-      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-    })) as Product[];
-  } catch (error) {
-    const firebaseError = error as FirebaseError;
-    
-    if (firebaseError.code !== 'failed-precondition') {
-      throw error;
-    }
-
-    // Fallback if the composite index (category + createdAt) doesn't exist yet
-    const fallbackConstraints: any[] = [
-      where('category', 'in', categories),
-      limit(limitAmount),
-    ];
-
-    const snapshot = await withTimeout(getDocs(query(productsRef, ...fallbackConstraints)), 12000, 'Loading products timed out.');
-    
-    return snapshot.docs.map((doc) => ({
-      ...doc.data(),
-      id: doc.id,
-      createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-    })) as Product[];
-  }
+  return snapshot.docs.map(mapProduct);
 };
 
 /**
@@ -164,11 +211,7 @@ export const getProductById = async (productId: string): Promise<Product | null>
 
   if (!docSnap.exists()) return null;
 
-  return {
-    ...docSnap.data(),
-    id: docSnap.id,
-    createdAt: docSnap.data().createdAt?.toDate?.() || new Date(),
-  } as Product;
+  return mapProduct(docSnap);
 };
 
 /**
@@ -186,6 +229,7 @@ export const addProduct = async (data: ProductFormData): Promise<Product> => {
     ...data,
     id: docRef.id,
     createdAt: new Date(),
+    images: normalizeProductImages(data.images),
   };
 };
 
@@ -254,38 +298,19 @@ export const createOrder = async (
  */
 export const getOrdersByUser = async (userId: string): Promise<Order[]> => {
   const { db } = getFirebaseServices();
-  let snapshot;
-
-  try {
-    const q = query(
-      collection(db, APP_CONFIG.collections.orders),
+  const ordersRef = collection(db, APP_CONFIG.collections.orders);
+  const snapshot = await getDocsWithIndexFallback(
+    ordersRef,
+    [
       where('userId', '==', userId),
       orderBy('createdAt', 'desc'),
-      limit(APP_CONFIG.pagination.ordersPerPage)
-    );
+      limit(APP_CONFIG.pagination.ordersPerPage),
+    ],
+    'Loading orders timed out.',
+    [where('userId', '==', userId), limit(APP_CONFIG.pagination.ordersPerPage)]
+  );
 
-    snapshot = await withTimeout(getDocs(q), 12000, 'Loading orders timed out.');
-  } catch (error) {
-    const firebaseError = error as FirebaseError;
-
-    if (firebaseError.code !== 'failed-precondition') {
-      throw error;
-    }
-
-    snapshot = await withTimeout(getDocs(
-      query(
-        collection(db, APP_CONFIG.collections.orders),
-        where('userId', '==', userId),
-        limit(APP_CONFIG.pagination.ordersPerPage)
-      )
-    ), 12000, 'Loading orders timed out.');
-  }
-
-  return snapshot.docs.map((doc) => ({
-    ...doc.data(),
-    id: doc.id,
-    createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-  })) as Order[];
+  return snapshot.docs.map(mapOrder);
 };
 
 /**
@@ -302,11 +327,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
 
   const snapshot = await withTimeout(getDocs(q), 12000, 'Loading orders timed out.');
 
-  return snapshot.docs.map((doc) => ({
-    ...doc.data(),
-    id: doc.id,
-    createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-  })) as Order[];
+  return snapshot.docs.map(mapOrder);
 };
 
 /**

@@ -3,9 +3,10 @@ import { View, StyleSheet } from 'react-native';
 import { Image, ImageStyle } from 'expo-image';
 import { COLORS } from '../../constants/theme';
 import { LoadingSpinner } from './LoadingSpinner';
+import { getProductImageUri, isEmbeddedProductImage } from '../../utils/productImages';
 
 interface ImageOptimizedProps {
-  uri: string;
+  uri?: string | null;
   style?: ImageStyle;
   className?: string; // For NativeWind
   contentFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
@@ -24,16 +25,17 @@ export const ImageOptimized = ({
 }: ImageOptimizedProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
-  const isEmbeddedImage = uri.startsWith('data:image/');
+  const safeUri = getProductImageUri(uri);
+  const isEmbeddedImage = isEmbeddedProductImage(safeUri);
 
   // A subtle dark gradient placeholder
   const placeholderColor = COLORS.surfaceContainerHigh;
 
   return (
-    <View className={`overflow-hidden bg-[${placeholderColor}] items-center justify-center ${className}`} style={[style]}>
+    <View className={`overflow-hidden items-center justify-center ${className}`} style={[{ backgroundColor: placeholderColor }, style]}>
       
       <Image
-        source={{ uri }}
+        source={{ uri: safeUri }}
         style={[StyleSheet.absoluteFill, style]} // ensures image fills the wrapper
         contentFit={contentFit}
         transition={isEmbeddedImage ? 0 : 300}

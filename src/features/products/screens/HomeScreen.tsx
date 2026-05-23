@@ -27,6 +27,7 @@ import { CONSOLE_CATEGORIES, GAME_CATEGORIES } from '../../../utils/productCateg
 import { ImageOptimized } from '../../../components/ui/ImageOptimized';
 import { useI18n } from '../../../localization/LocalizationProvider';
 import { FLOATING_CUSTOMER_TAB_BAR_CLEARANCE } from '../../../constants/layout';
+import { getProductImageUri } from '../../../utils/productImages';
 
 const { height } = Dimensions.get('window');
 
@@ -226,7 +227,7 @@ export const HomeScreen = () => {
                 onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
               >
                 <View className="mb-2 h-40 overflow-hidden rounded-[20px] border border-white/5 bg-surface-container">
-                  <ImageOptimized uri={item.images[0]} style={{ width: '100%', height: '100%' }} />
+                  <ImageOptimized uri={getProductImageUri(item.images[0])} style={{ width: '100%', height: '100%' }} />
                 </View>
                 <Text className="font-bold text-white" numberOfLines={1}>
                   {item.name}
@@ -267,7 +268,7 @@ export const HomeScreen = () => {
                 onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
               >
                 <View className="mb-2 h-40 overflow-hidden rounded-[20px] border border-white/5 bg-surface-container">
-                  <ImageOptimized uri={item.images[0]} style={{ width: '100%', height: '100%' }} />
+                  <ImageOptimized uri={getProductImageUri(item.images[0])} style={{ width: '100%', height: '100%' }} />
                 </View>
                 <Text className="font-bold text-white" numberOfLines={1}>
                   {item.name}
@@ -284,15 +285,15 @@ export const HomeScreen = () => {
         )}
       </Animated.View>
 
-      <Animated.View
-        entering={FadeInDown.delay(220).duration(420)}
-        className="mx-4 mt-2 mb-28 rounded-[24px] border border-white/10 bg-surface-container-high/70 px-6 py-5"
-      >
+        <Animated.View
+          entering={FadeInDown.delay(220).duration(420)}
+          className="mx-4 mt-2 mb-28 rounded-[24px] border border-white/10 bg-surface-container-high/70 px-6 py-5"
+        >
         <Text className="text-[10px] font-bold uppercase tracking-widest text-[#adaaaa]">
-          Account & Legal
+          {t('home.accountLegal')}
         </Text>
         <Text className="mt-2 text-sm leading-6 text-on-surface-variant">
-          Review the privacy policy, open the public compliance page, or submit an account deletion request required for Play Store distribution.
+          {t('home.accountLegalBody')}
         </Text>
 
         <View className="mt-4 flex-row">
@@ -302,10 +303,10 @@ export const HomeScreen = () => {
             className="mr-3 flex-1 rounded-2xl border border-primary/25 bg-primary/10 px-4 py-4"
           >
             <Text className="font-headline text-sm font-bold uppercase tracking-[2px] text-primary">
-              Privacy Policy
+              {t('home.privacyPolicyTitle')}
             </Text>
             <Text className="mt-2 text-xs leading-5 text-on-surface-variant">
-              View the in-app summary and the public URL for Google Play.
+              {t('home.privacyPolicyBody')}
             </Text>
           </TouchableOpacity>
 
@@ -315,10 +316,10 @@ export const HomeScreen = () => {
             className="flex-1 rounded-2xl border border-error/25 bg-error/10 px-4 py-4"
           >
             <Text className="font-headline text-sm font-bold uppercase tracking-[2px] text-error">
-              Delete Account
+              {t('home.deleteAccountTitle')}
             </Text>
             <Text className="mt-2 text-xs leading-5 text-on-surface-variant">
-              Submit an in-app deletion request and review the external deletion steps.
+              {t('home.deleteAccountBody')}
             </Text>
           </TouchableOpacity>
         </View>

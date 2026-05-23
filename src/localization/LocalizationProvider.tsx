@@ -37,24 +37,31 @@ const interpolate = (value: string, vars?: Record<string, string | number>) => {
   );
 };
 
-const getTranslationValue = (language: SupportedLanguage, key: string) => {
-  const parts = key.split('.');
-  let current: any = translations[language];
+const isTranslationLeaf = (value: unknown): value is string => typeof value === 'string';
+
+const resolveNestedValue = (value: unknown, parts: string[]) => {
+  let current = value;
 
   for (const part of parts) {
-    current = current?.[part];
+    if (typeof current !== 'object' || current === null || !(part in current)) {
+      return null;
+    }
+
+    current = (current as Record<string, unknown>)[part];
   }
 
-  if (typeof current === 'string') {
+  return current;
+};
+
+const getTranslationValue = (language: SupportedLanguage, key: string) => {
+  const parts = key.split('.');
+  const current = resolveNestedValue(translations[language], parts);
+  if (isTranslationLeaf(current)) {
     return current;
   }
 
-  let fallback: any = translations.en;
-  for (const part of parts) {
-    fallback = fallback?.[part];
-  }
-
-  return typeof fallback === 'string' ? fallback : key;
+  const fallback = resolveNestedValue(translations.en, parts);
+  return isTranslationLeaf(fallback) ? fallback : key;
 };
 
 export const LocalizationProvider = ({ children }: { children: React.ReactNode }) => {

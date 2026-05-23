@@ -3,6 +3,7 @@ import { View, Text, FlatList, Alert, TouchableOpacity } from 'react-native';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { MaterialTopTabScreenProps } from '@react-navigation/material-top-tabs';
 import { useCartStore } from '../../../store/cartStore';
 import { useAuthStore } from '../../../store/authStore';
 import { useOrdersStore } from '../../../store/ordersStore';
@@ -14,8 +15,11 @@ import { formatPrice } from '../../../utils/formatting';
 import { COLORS } from '../../../constants/theme';
 import { useI18n } from '../../../localization/LocalizationProvider';
 import { FLOATING_CUSTOMER_TAB_BAR_CLEARANCE } from '../../../constants/layout';
+import { CustomerTabParamList } from '../../../navigation/types';
 
-export const CartScreen = ({ navigation }: any) => {
+type Props = MaterialTopTabScreenProps<CustomerTabParamList, 'CartTab'>;
+
+export const CartScreen = ({ navigation }: Props) => {
   const { items, total, itemCount, updateQuantity, removeItem, clearCart } = useCartStore();
   const { user, isGuest } = useAuthStore();
   const { createOrder } = useOrdersStore();

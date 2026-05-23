@@ -3,14 +3,7 @@
  * Maps directly to the Firestore 'products' collection schema.
  */
 
-// Active categories are consoles and games; legacy values remain for Firestore compatibility.
-export type ProductCategory =
-  | 'consoles'
-  | 'games'
-  | 'playstation'
-  | 'xbox'
-  | 'cds'
-  | 'accessories';
+export type ProductCategory = 'consoles' | 'games' | 'accessories';
 
 // Whether a product is new or used (important for a gaming store)
 export type ProductCondition = 'new' | 'used';

@@ -29,14 +29,6 @@ const TAB_ICONS: Record<keyof CustomerTabParamList, keyof typeof MaterialIcons.g
   CartTab: 'credit-card',
 };
 
-const TAB_LABELS: Record<keyof CustomerTabParamList, string> = {
-  HomeTab: 'Home',
-  ConsolesTab: 'Console',
-  AccessoriesTab: 'Accessory',
-  GamesTab: 'Game',
-  CartTab: 'Cart',
-};
-
 const CustomerTabBar = ({ state, descriptors, navigation }: MaterialTopTabBarProps) => {
   const itemCount = useCartStore((store) => store.itemCount);
   const insets = useSafeAreaInsets();
@@ -209,6 +201,8 @@ const CustomerTabBar = ({ state, descriptors, navigation }: MaterialTopTabBarPro
 };
 
 export const CustomerTabs = () => {
+  const { t } = useI18n();
+
   return (
     <CustomerStack.Navigator
       screenOptions={{
@@ -243,7 +237,7 @@ export const CustomerTabs = () => {
         component={ProductDetailScreen}
         options={{
           headerShown: true,
-          title: 'Item Details',
+          title: t('legal.productDetails'),
           headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
           headerTintColor: COLORS.onSurface,
           headerTitleStyle: { fontFamily: FONTS.headline },
@@ -256,7 +250,7 @@ export const CustomerTabs = () => {
         component={PrivacyPolicyScreen}
         options={{
           headerShown: true,
-          title: 'Privacy Policy',
+          title: t('legal.navigationPrivacyPolicy'),
           headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
           headerTintColor: COLORS.onSurface,
           headerTitleStyle: { fontFamily: FONTS.headline },
@@ -269,7 +263,7 @@ export const CustomerTabs = () => {
         component={DeleteAccountScreen}
         options={{
           headerShown: true,
-          title: 'Delete Account',
+          title: t('legal.navigationDeleteAccount'),
           headerStyle: { backgroundColor: COLORS.surfaceContainerHighest },
           headerTintColor: COLORS.onSurface,
           headerTitleStyle: { fontFamily: FONTS.headline },
