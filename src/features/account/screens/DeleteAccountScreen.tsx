@@ -3,7 +3,6 @@ import { Alert, Linking, Modal, Pressable, Text, TextInput, View } from 'react-n
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenWrapper } from '../../../components/layout/ScreenWrapper';
 import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
 import { CustomerStackParamList } from '../../../navigation/types';
 import { APP_CONFIG } from '../../../constants/config';
 import { useAuthStore } from '../../../store/authStore';
@@ -19,6 +18,11 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
 
   const handleDeleteRequest = () => {
     setIsPasswordPromptVisible(true);
+  };
+
+  const closePasswordPrompt = () => {
+    setPassword('');
+    setIsPasswordPromptVisible(false);
   };
 
   const handleConfirmDelete = async () => {
@@ -61,22 +65,6 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
       </View>
 
       <View className="mb-4 rounded-[24px] border border-white/10 bg-surface-container-high px-5 py-5">
-        <Text className="font-headline text-lg font-bold text-on-surface">{t('auth.password')}</Text>
-        <Text className="mt-3 text-sm leading-6 text-on-surface-variant">
-          Enter your password to confirm deletion.
-        </Text>
-        <Input
-          label={t('auth.password')}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-          autoCapitalize="none"
-          autoCorrect={false}
-          className="mb-0 mt-4"
-        />
-      </View>
-
-      <View className="mb-4 rounded-[24px] border border-white/10 bg-surface-container-high px-5 py-5">
         <Text className="font-headline text-lg font-bold text-on-surface">{t('legal.howThisWorksTitle')}</Text>
         <Text className="mt-3 text-sm leading-6 text-on-surface-variant">
           {t('legal.howThisWorksBody')}
@@ -89,7 +77,7 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
       </View>
 
       <Button
-        title={isLoading ? t('legal.submitting') : 'Delete Account'}
+        title={isLoading ? t('legal.submitting') : t('legal.requestDeletion')}
         variant="danger"
         loading={isLoading}
         onPress={handleDeleteRequest}
@@ -107,7 +95,7 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
         visible={isPasswordPromptVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setIsPasswordPromptVisible(false)}
+        onRequestClose={closePasswordPrompt}
       >
         <View className="flex-1 items-center justify-center bg-black/70 px-4">
           <View className="w-full rounded-[24px] border border-white/10 bg-surface-container-high px-5 py-5">
@@ -132,7 +120,7 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
 
             <View className="mt-5 flex-row">
               <Pressable
-                onPress={() => setIsPasswordPromptVisible(false)}
+                onPress={closePasswordPrompt}
                 className="mr-3 flex-1 rounded-2xl border border-white/10 px-4 py-3"
               >
                 <Text className="text-center font-bold text-on-surface-variant">{t('legal.cancel')}</Text>
@@ -141,7 +129,7 @@ export const DeleteAccountScreen = ({ navigation }: Props) => {
                 onPress={() => void handleConfirmDelete()}
                 className="flex-1 rounded-2xl bg-error px-4 py-3"
               >
-                <Text className="text-center font-bold text-white">Delete Account</Text>
+                <Text className="text-center font-bold text-white">{t('legal.requestDeletion')}</Text>
               </Pressable>
             </View>
           </View>

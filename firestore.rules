@@ -16,9 +16,9 @@ service cloud.firestore {
     match /users/{userId} {
       // Anyone can create a user doc during registration
       allow create: if isAuth() && request.auth.uid == userId;
-      // Users can only read/update their own profile. Admins can read all.
+      // Users can only read/update/delete their own profile. Admins can read all.
       allow read, update: if (isAuth() && request.auth.uid == userId) || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if (isAuth() && request.auth.uid == userId) || isAdmin();
     }
 
     match /products/{productId} {
