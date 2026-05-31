@@ -96,8 +96,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       await authService.requestAccountDeletion(currentUser.id, password);
-      await authService.logout();
-      set({ user: null, isGuest: false, isLoading: false });
+      set({ user: null, isGuest: false, isLoading: false, error: null });
     } catch (error: any) {
       set({ error: error.message || 'Failed to request account deletion.', isLoading: false });
       throw error;
