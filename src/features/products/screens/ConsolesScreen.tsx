@@ -4,7 +4,7 @@ import { ProductCatalogScreen } from '../components/ProductCatalogScreen';
 export const ConsolesScreen = () => {
   return (
     <ProductCatalogScreen
-      heroSource={require('../../../../assets/consoles-hero.png')}
+      heroSource={require('../../../../assets/hero-gallery-3.jpg')}
       heroGradient={['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.15)', 'rgba(0,0,0,0.82)']}
       categoryTitleKey="catalog.console"
       categorySubtitleKey="catalog.consoleSubtitle"

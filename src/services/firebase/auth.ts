@@ -15,12 +15,15 @@
 
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  deleteUser as firebaseDeleteUser,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDocFromCache, getDocFromServer, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDocFromCache, getDocFromServer, updateDoc, deleteDoc } from 'firebase/firestore';
 import { getFirebaseServices, getFirebaseInitializationError, isFirebaseConfigured } from './config';
 import { User, RegisterData, LoginData } from '../../types';
 import { APP_CONFIG } from '../../constants/config';
@@ -112,14 +115,23 @@ export const logout = async (): Promise<void> => {
   profileCache.clear();
 };
 
-export const requestAccountDeletion = async (uid: string): Promise<void> => {
-  const { db } = getFirebaseServices();
-  await updateDoc(doc(db, APP_CONFIG.collections.users, uid), {
-    deletionRequestStatus: 'requested',
-    deletionRequestedAt: new Date().toISOString(),
-  });
+export const requestAccountDeletion = async (uid: string, password: string): Promise<void> => {
+  const { auth, db } = getFirebaseServices();
+  const userRef = doc(db, APP_CONFIG.collections.users, uid);
+  const currentUser = auth.currentUser;
 
+  if (!currentUser || currentUser.uid !== uid) {
+    throw new Error('No active account found.');
+  }
+  if (!currentUser.email) {
+    throw new Error('Account email is missing.');
+  }
+
+  const credential = EmailAuthProvider.credential(currentUser.email, password);
+  await reauthenticateWithCredential(currentUser, credential);
+  await deleteDoc(userRef);
   profileCache.delete(uid);
+  await firebaseDeleteUser(currentUser);
 };
 
 /**

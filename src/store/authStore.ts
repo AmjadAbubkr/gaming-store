@@ -22,7 +22,7 @@ interface AuthState {
   loginAsAdmin: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  requestAccountDeletion: () => Promise<void>;
+  requestAccountDeletion: (password: string) => Promise<void>;
   setGuestMode: (isGuest: boolean) => void;
   setUser: (user: User | null) => void;
   clearError: () => void;
@@ -84,7 +84,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  requestAccountDeletion: async () => {
+  requestAccountDeletion: async (password: string) => {
     const currentUser = useAuthStore.getState().user;
 
     if (!currentUser) {
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
 
     try {
-      await authService.requestAccountDeletion(currentUser.id);
+      await authService.requestAccountDeletion(currentUser.id, password);
       await authService.logout();
       set({ user: null, isGuest: false, isLoading: false });
     } catch (error: any) {

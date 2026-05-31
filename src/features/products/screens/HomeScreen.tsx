@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
 } from 'react-native';
-import { CompositeNavigationProp, useFocusEffect, useNavigation } from '@react-navigation/native';
+import { CompositeNavigationProp, useNavigation } from '@react-navigation/native';
 import { NavigationProp } from '@react-navigation/native';
 import { MaterialTopTabNavigationProp } from '@react-navigation/material-top-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,15 +31,7 @@ import { getProductImageUri } from '../../../utils/productImages';
 
 const { height } = Dimensions.get('window');
 
-const HERO_BANNERS = [require('../../../../assets/home-hero.jpg')];
-
-const getNextHeroIndex = (currentIndex: number) => {
-  if (HERO_BANNERS.length <= 1) {
-    return currentIndex;
-  }
-
-  return (currentIndex + 1) % HERO_BANNERS.length;
-};
+const HERO_BANNERS = [require('../../../../assets/hero-gallery-1.jpg')];
 
 const HomeSectionSkeleton = () => (
   <View className="flex-row">
@@ -64,7 +56,6 @@ export const HomeScreen = () => {
   const { user, logout } = useAuthStore();
   const { t } = useI18n();
   const { items: cartItems, total: totalPrice } = useCartStore();
-  const [heroIndex, setHeroIndex] = useState(() => Math.floor(Math.random() * HERO_BANNERS.length));
   const [featuredConsoles, setFeaturedConsoles] = useState<Product[]>([]);
   const [featuredGames, setFeaturedGames] = useState<Product[]>([]);
   const [isCatalogLoading, setIsCatalogLoading] = useState(true);
@@ -105,13 +96,7 @@ export const HomeScreen = () => {
     };
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      setHeroIndex((currentIndex) => getNextHeroIndex(currentIndex));
-    }, [])
-  );
-
-  const currentHero = HERO_BANNERS[heroIndex];
+  const currentHero = HERO_BANNERS[0];
 
   return (
     <ScreenWrapper
@@ -120,7 +105,7 @@ export const HomeScreen = () => {
       bottomPadding={FLOATING_CUSTOMER_TAB_BAR_CLEARANCE}
       className="flex-1 bg-black"
     >
-      <Animated.View key={`hero-${heroIndex}`} entering={FadeInDown.duration(260)} className="px-4 pt-4">
+      <Animated.View entering={FadeInDown.duration(260)} className="px-4 pt-4">
         <ImageBackground
           source={currentHero}
           style={{ width: '100%', height: height * 0.46, minHeight: 320 }}
