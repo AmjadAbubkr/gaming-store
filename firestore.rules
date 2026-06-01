@@ -18,7 +18,8 @@ service cloud.firestore {
       allow create: if isAuth() && request.auth.uid == userId;
       // Users can only read/update/delete their own profile. Admins can read all.
       allow read, update: if (isAuth() && request.auth.uid == userId) || isAdmin();
-      allow delete: if (isAuth() && request.auth.uid == userId) || isAdmin();
+      // Keep self-delete on the direct owner check so the rule stays predictable.
+      allow delete: if isAuth() && request.auth.uid == userId;
     }
 
     match /products/{productId} {
